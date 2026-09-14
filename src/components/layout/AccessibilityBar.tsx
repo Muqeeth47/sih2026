@@ -1,9 +1,79 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { useFontScale } from '@/hooks/useFontScale';
-import { Shield } from 'lucide-react';
+import { Shield, Globe, Languages } from 'lucide-react';
+
+declare global {
+  interface Window {
+    google?: any;
+    googleTranslateElementInit?: () => void;
+  }
+}
 
 export default function AccessibilityBar() {
   const { scale, setFontScale } = useFontScale();
+  const [activeLang, setActiveLang] = useState<'en' | 'hi'>('en');
+
+  useEffect(() => {
+    // Detect existing translation cookie
+    if (typeof document !== 'undefined') {
+      const match = document.cookie.match(/googtrans=\/en\/([a-z]{2})/);
+      if (match && match[1] === 'hi') {
+        setActiveLang('hi');
+      }
+    }
+
+    const initTranslate = () => {
+      if (window.google?.translate?.TranslateElement) {
+        const el = document.getElementById('google_translate_element');
+        if (el && el.children.length === 0) {
+          try {
+            new window.google.translate.TranslateElement(
+              {
+                pageLanguage: 'en',
+                includedLanguages: 'hi,en,bn,te,mr,ta,gu,kn,ml,pa',
+                layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false,
+              },
+              'google_translate_element'
+            );
+          } catch (e) {
+            console.error('Google Translate init failed:', e);
+          }
+        }
+      }
+    };
+
+    window.googleTranslateElementInit = initTranslate;
+
+    // Dynamically ensure the script is loaded and executed after React hydration
+    if (!document.getElementById('google-translate-script')) {
+      const script = document.createElement('script');
+      script.id = 'google-translate-script';
+      script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      script.async = true;
+      document.body.appendChild(script);
+    } else {
+      initTranslate();
+    }
+  }, []);
+
+  const handleLanguageSwitch = (targetLang: 'en' | 'hi') => {
+    setActiveLang(targetLang);
+
+    if (typeof document !== 'undefined') {
+      const select = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
+      if (select) {
+        select.value = targetLang;
+        select.dispatchEvent(new Event('change'));
+      } else {
+        // Fallback cookie injection for full-page translate
+        document.cookie = `googtrans=/en/${targetLang}; path=/; domain=${window.location.hostname}`;
+        document.cookie = `googtrans=/en/${targetLang}; path=/;`;
+        window.location.reload();
+      }
+    }
+  };
 
   return (
     <div
@@ -23,10 +93,52 @@ export default function AccessibilityBar() {
         </span>
       </div>
 
-      {/* Right: Translate + Font Controls (No skip-to-content button) */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-        {/* Google Translate Widget */}
-        <div id="google_translate_element" style={{ display: 'inline-flex', alignItems: 'center' }} />
+      {/* Right: Translate + Font Controls */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexShrink: 0 }}>
+        {/* Quick Language Toggle (English / हिन्दी) */}
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: '#e2e8f0', borderRadius: '6px', padding: '2px' }}>
+          <button
+            type="button"
+            onClick={() => handleLanguageSwitch('en')}
+            style={{
+              padding: '2px 7px',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              borderRadius: '4px',
+              border: 'none',
+              background: activeLang === 'en' ? '#0f5ca8' : 'transparent',
+              color: activeLang === 'en' ? '#ffffff' : '#334155',
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+          >
+            English
+          </button>
+          <button
+            type="button"
+            onClick={() => handleLanguageSwitch('hi')}
+            style={{
+              padding: '2px 7px',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              borderRadius: '4px',
+              border: 'none',
+              background: activeLang === 'hi' ? '#0f5ca8' : 'transparent',
+              color: activeLang === 'hi' ? '#ffffff' : '#334155',
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+          >
+            हिन्दी
+          </button>
+        </div>
+
+        {/* Google Translate Dropdown Container */}
+        <div
+          id="google_translate_element"
+          style={{ display: 'inline-flex', alignItems: 'center' }}
+          title="Translate page into regional Indian languages"
+        />
 
         <span style={{ color: '#cbd5e1' }}>|</span>
 

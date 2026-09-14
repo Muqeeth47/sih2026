@@ -236,22 +236,15 @@ export default function LoginPage() {
               </button>
             </div>
 
-            {/* Segmented Role Selector Tabs */}
+            {/* Segmented Role Selector Tabs (All 4 Official Roles) */}
             <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr',
-                gap: '0.4rem',
-                background: '#f1f5f9',
-                padding: '4px',
-                borderRadius: '12px',
-                marginBottom: '1.5rem',
-              }}
+              className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 bg-slate-100 rounded-xl mb-6"
             >
               {[
                 { role: 'ncb_io' as NCBRole, label: 'Field IO', icon: User },
                 { role: 'ncb_fsl' as NCBRole, label: 'Forensic Lab', icon: FlaskConical },
                 { role: 'ncb_zonal' as NCBRole, label: 'Zonal HQ', icon: Building2 },
+                { role: 'ncb_court' as NCBRole, label: 'NDPS Court', icon: Scale },
               ].map(tab => {
                 const Icon = tab.icon;
                 const isSelected = activeRoleTab === tab.role;
@@ -264,20 +257,21 @@ export default function LoginPage() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '0.4rem',
-                      padding: '0.65rem 0.5rem',
+                      gap: '0.35rem',
+                      padding: '0.65rem 0.4rem',
                       borderRadius: '8px',
                       background: isSelected ? '#ffffff' : 'transparent',
                       color: isSelected ? '#0f172a' : '#64748b',
                       border: isSelected ? '1px solid #e2e8f0' : '1px solid transparent',
                       boxShadow: isSelected ? '0 2px 4px rgba(0,0,0,0.04)' : 'none',
                       fontWeight: isSelected ? 700 : 500,
-                      fontSize: '0.78rem',
+                      fontSize: '0.76rem',
                       cursor: 'pointer',
                       transition: 'all 0.15s',
+                      whiteSpace: 'nowrap',
                     }}
                   >
-                    <Icon size={15} color={isSelected ? '#0f5ca8' : '#64748b'} />
+                    <Icon size={14} color={isSelected ? '#0f5ca8' : '#64748b'} />
                     <span>{tab.label}</span>
                   </button>
                 );
@@ -663,17 +657,7 @@ export default function LoginPage() {
               </form>
             )}
 
-            {/* Alternate Access Line */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.25rem', fontSize: '0.78rem' }}>
-              <span style={{ color: '#64748b' }}>Need NDPS court reader clearance?</span>
-              <button
-                type="button"
-                onClick={() => handleRoleTabSelect('ncb_court')}
-                style={{ background: 'none', border: 'none', color: '#0f5ca8', fontWeight: 700, cursor: 'pointer', padding: 0 }}
-              >
-                Open court access
-              </button>
-            </div>
+
           </div>
 
           {/* ── Bottom Quick Demo Sign-in Strip (Matching User Reference Image) ── */}
