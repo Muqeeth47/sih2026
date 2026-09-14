@@ -1,0 +1,288 @@
+// src/data/mockData.ts
+// All mock data for DRUG-SEAL AI — centralized, not hardcoded in components
+
+import type { ScanResult } from '@/types/drug';
+import type { PanchnamaForm } from '@/types/panchnama';
+
+// ─── Mock Scan Results ──────────────────────────────────────────
+export const MOCK_SCAN_RESULTS: ScanResult[] = [
+  {
+    id: 'scan_001',
+    timestamp: '2026-09-14T08:23:14Z',
+    officerBadge: 'NCB-IO-4092',
+    reagentType: 'marquis',
+    capturedColor: { r: 45, g: 27, b: 105, L: 14.2, a: 22.1, bStar: -31.4 },
+    deltaE: 4.2,
+    matchedSubstance: 'heroin',
+    matchedReagentRef: null,
+    confidence: 'high',
+    testStatus: 'positive',
+    blurAnalysis: { laplacianVariance: 312.4, isSharp: true, warningThreshold: 90, message: 'Sharp — excellent quality' },
+    glareAnalysis: { hasGlare: false, glarePercentage: 1.2, saturationWarning: false, message: 'No glare detected' },
+    photoHash: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+    gps: { latitude: 28.6139, longitude: 77.2090, accuracy: 4.2, timestamp: '2026-09-14T08:23:10Z', source: 'device_gps' },
+    aiAnalysis: {
+      substance: 'Heroin (Diacetylmorphine)',
+      confidence: 0.94,
+      purity: '62–68%',
+      adulterants: ['Caffeine', 'Paracetamol'],
+      tamperDetected: false,
+      pouchLotNumber: 'LOT-MQ-2024-089',
+      pouchExpiry: '2027-06',
+      courtSummary: 'Marquis reagent test produced purple-to-black color transition consistent with heroin. CIELAB ΔE₂₀₀₀ = 4.2 (high confidence match). AI cross-validation confirms heroin with 94% confidence. Estimated purity 62–68%. Adulterants: caffeine, paracetamol.',
+      batchId: 'AI-BATCH-001',
+    },
+    syncPending: false,
+    syncedAt: '2026-09-14T08:25:00Z',
+    caseId: 'NCB-CASE-2026-00421',
+  },
+  {
+    id: 'scan_002',
+    timestamp: '2026-09-13T15:44:32Z',
+    officerBadge: 'NCB-IO-4092',
+    reagentType: 'scott',
+    capturedColor: { r: 26, g: 86, b: 196, L: 35.8, a: 14.2, bStar: -52.3 },
+    deltaE: 6.8,
+    matchedSubstance: 'cocaine',
+    matchedReagentRef: null,
+    confidence: 'high',
+    testStatus: 'positive',
+    blurAnalysis: { laplacianVariance: 284.1, isSharp: true, warningThreshold: 90, message: 'Sharp — excellent quality' },
+    glareAnalysis: { hasGlare: false, glarePercentage: 0.8, saturationWarning: false, message: 'No glare detected' },
+    photoHash: 'b2c3d4e5f6a7b2c3d4e5f6a7b2c3d4e5f6a7b2c3d4e5f6a7b2c3d4e5f6a7b2c3',
+    gps: { latitude: 26.9124, longitude: 75.7873, accuracy: 6.1, timestamp: '2026-09-13T15:44:28Z', source: 'device_gps' },
+    aiAnalysis: {
+      substance: 'Cocaine Hydrochloride',
+      confidence: 0.91,
+      purity: '78–84%',
+      adulterants: ['Lidocaine', 'Levamisole'],
+      tamperDetected: false,
+      courtSummary: 'Scott reagent produced cobalt blue coloration indicative of cocaine HCl. ΔE₂₀₀₀ = 6.8. Estimated purity 78–84%.',
+    },
+    syncPending: false,
+    syncedAt: '2026-09-13T15:46:00Z',
+    caseId: 'NCB-CASE-2026-00418',
+  },
+  {
+    id: 'scan_003',
+    timestamp: '2026-09-12T11:02:58Z',
+    officerBadge: 'NCB-IO-4092',
+    reagentType: 'duquenois_levine',
+    capturedColor: { r: 107, g: 33, b: 168, L: 22.1, a: 38.7, bStar: -31.2 },
+    deltaE: 3.1,
+    matchedSubstance: 'cannabis',
+    matchedReagentRef: null,
+    confidence: 'high',
+    testStatus: 'positive',
+    blurAnalysis: { laplacianVariance: 198.7, isSharp: true, warningThreshold: 90, message: 'Acceptable sharpness' },
+    glareAnalysis: { hasGlare: false, glarePercentage: 2.4, saturationWarning: false, message: 'No glare detected' },
+    photoHash: 'c3d4e5f6a7b8c3d4e5f6a7b8c3d4e5f6a7b8c3d4e5f6a7b8c3d4e5f6a7b8c3d4',
+    gps: { latitude: 27.1767, longitude: 78.0081, accuracy: 8.3, timestamp: '2026-09-12T11:02:55Z', source: 'device_gps' },
+    syncPending: true,
+    caseId: 'NCB-CASE-2026-00415',
+  },
+  {
+    id: 'scan_004',
+    timestamp: '2026-09-11T09:17:43Z',
+    officerBadge: 'NCB-IO-4092',
+    reagentType: 'mecke',
+    capturedColor: { r: 30, g: 122, b: 110, L: 46.2, a: -22.1, bStar: 3.4 },
+    deltaE: 7.4,
+    matchedSubstance: 'heroin',
+    matchedReagentRef: null,
+    confidence: 'medium',
+    testStatus: 'positive',
+    blurAnalysis: { laplacianVariance: 156.2, isSharp: true, warningThreshold: 90, message: 'Acceptable sharpness' },
+    glareAnalysis: { hasGlare: true, glarePercentage: 11.3, saturationWarning: false, message: 'Glare detected — angle away from light source' },
+    photoHash: 'd4e5f6a7b8c9d4e5f6a7b8c9d4e5f6a7b8c9d4e5f6a7b8c9d4e5f6a7b8c9d4e5',
+    gps: { latitude: 29.3909, longitude: 76.9635, accuracy: 12.7, timestamp: '2026-09-11T09:17:40Z', source: 'device_gps' },
+    syncPending: true,
+    caseId: 'NCB-CASE-2026-00410',
+  },
+];
+
+// ─── Mock Panchnama Records ─────────────────────────────────────
+export const MOCK_PANCHNAMAS: PanchnamaForm[] = [
+  {
+    id: 'panch_001',
+    formNumber: 'NCB/DL/2026/F/001',
+    ndpsSection: 'Section 52',
+    caseNumber: 'NCB-CASE-2026-00421',
+    seizureDate: '2026-09-14',
+    seizureTime: '08:23',
+    seizureLocation: {
+      description: 'NH-44 Bypass, Toll Gate No. 3, Near Singhu Border',
+      district: 'North Delhi',
+      state: 'Delhi',
+      latitude: 28.6139,
+      longitude: 77.2090,
+      nearestLandmark: 'Singhu Border Check Post',
+      highwayRoute: 'NH-44 (Delhi-Chandigarh)',
+    },
+    accused: [
+      {
+        fullName: 'Rahul Kumar Singh',
+        age: 34,
+        gender: 'male',
+        fatherName: 'Ramesh Singh',
+        address: 'Village Bahadurgarh, Near Bus Stand',
+        district: 'Jhajjar',
+        state: 'Haryana',
+        nationality: 'Indian',
+        idType: 'aadhaar',
+        idNumber: '4721-XXXX-XXXX',
+      },
+    ],
+    seizureItems: [
+      {
+        substanceName: 'Heroin (Brown Sugar)',
+        apparentForm: 'powder',
+        weightGrams: 850,
+        netWeightGrams: 837.4,
+        grossWeightGrams: 862.1,
+        packagingType: 'Polythene pouches inside jute bag',
+        numberOfPackets: 12,
+        colorDescription: 'Brown/light brown granular powder',
+        odorDescription: 'Characteristic acetic acid-like odor',
+        reagentTestResult: 'Marquis: Purple → Black (Positive for Opiates)',
+        sampleDrawn: true,
+        sampleWeightGrams: 12.6,
+      },
+    ],
+    evidencePhotoHashes: [
+      'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+    ],
+    linkedScanIds: ['scan_001'],
+    investigatingOfficer: {
+      name: 'Sub-Inspector Pradeep Sharma',
+      designation: 'Sub-Inspector (NCB)',
+      badgeNumber: 'NCB-IO-4092',
+      unit: 'NCB Delhi Zonal Unit',
+      phoneNumber: '9XXXXXXXXX',
+    },
+    witnesses: [
+      { name: 'Constable Vikram Yadav', designation: 'Constable, NCB Delhi', badge: 'NCB-CT-1203' },
+      { name: 'Ramesh Gupta', designation: 'Panch Witness (Civilian)' },
+    ],
+    vehicleSeized: true,
+    vehicleDetails: {
+      registrationNumber: 'HR 26 AX 4421',
+      make: 'Tata',
+      model: 'Ace',
+      color: 'White',
+    },
+    remarksNarrative: 'On the intervening night of 13-14 September 2026, acting on specific intelligence, a naka checking was conducted at NH-44 Toll Gate No. 3. A Tata Ace (HR 26 AX 4421) was intercepted. On personal search of the driver Rahul Kumar Singh, 12 polythene pouches containing brown powder were recovered from a concealed compartment beneath the rear cargo floor. Field test using NIK Marquis reagent produced purple-to-black coloration confirming presence of opiates. SHA-256 photo hash sealed via DRUG-SEAL AI system.',
+    legalSections: [
+      'Section 8(c) NDPS Act 1985',
+      'Section 21(c) NDPS Act 1985',
+      'Section 52 NDPS Act 1985',
+      'Section 67 NDPS Act 1985',
+    ],
+    createdAt: '2026-09-14T08:30:00Z',
+    updatedAt: '2026-09-14T09:15:00Z',
+    submittedAt: '2026-09-14T09:15:00Z',
+    status: 'submitted',
+  },
+];
+
+// ─── Mock Analytics / Zonal Data ───────────────────────────────
+export const MOCK_ZONAL_STATS = {
+  totalSeizures: 1847,
+  totalWeightKg: 2341.8,
+  activeOfficers: 312,
+  testsPerformed: 4521,
+  positiveRate: 73.2,
+  pendingSync: 4,
+};
+
+export const MOCK_MONTHLY_SEIZURES = [
+  { month: 'Apr', seizures: 142, weight: 184.2 },
+  { month: 'May', seizures: 168, weight: 210.5 },
+  { month: 'Jun', seizures: 155, weight: 198.3 },
+  { month: 'Jul', seizures: 201, weight: 267.8 },
+  { month: 'Aug', seizures: 189, weight: 241.2 },
+  { month: 'Sep', seizures: 147, weight: 192.4 },
+];
+
+export const MOCK_DRUG_BREAKDOWN = [
+  { name: 'Heroin', value: 34, color: '#dc2626' },
+  { name: 'Cannabis', value: 28, color: '#138808' },
+  { name: 'Cocaine', value: 18, color: '#f59e0b' },
+  { name: 'Methamphetamine', value: 12, color: '#7c3aed' },
+  { name: 'MDMA', value: 5, color: '#0284c7' },
+  { name: 'Others', value: 3, color: '#94a3b8' },
+];
+
+export const MOCK_ZONE_COMPARISON = [
+  { zone: 'Delhi', seizures: 312, weight: 421.3 },
+  { zone: 'Mumbai', seizures: 287, weight: 389.2 },
+  { zone: 'Chennai', seizures: 198, weight: 264.8 },
+  { zone: 'Kolkata', seizures: 176, weight: 231.4 },
+  { zone: 'Lucknow', seizures: 203, weight: 278.6 },
+  { zone: 'Jodhpur', seizures: 156, weight: 198.7 },
+  { zone: 'Chandigarh', seizures: 134, weight: 174.2 },
+  { zone: 'Bengaluru', seizures: 145, weight: 187.9 },
+  { zone: 'Patna', seizures: 121, weight: 156.3 },
+  { zone: 'Guwahati', seizures: 115, weight: 139.2 },
+];
+
+export const MOCK_MAP_SEIZURES = [
+  { id: 1, lat: 28.6139, lng: 77.2090, district: 'Delhi', substance: 'Heroin', weight: 850, date: '2026-09-14' },
+  { id: 2, lat: 26.9124, lng: 75.7873, district: 'Jaipur, Rajasthan', substance: 'Cocaine', weight: 340, date: '2026-09-13' },
+  { id: 3, lat: 27.1767, lng: 78.0081, district: 'Agra, UP', substance: 'Cannabis', weight: 12400, date: '2026-09-12' },
+  { id: 4, lat: 29.3909, lng: 76.9635, district: 'Karnal, Haryana', substance: 'Heroin', weight: 620, date: '2026-09-11' },
+  { id: 5, lat: 19.0760, lng: 72.8777, district: 'Mumbai, MH', substance: 'Cocaine', weight: 2100, date: '2026-09-10' },
+  { id: 6, lat: 17.3850, lng: 78.4867, district: 'Hyderabad, TS', substance: 'MDMA', weight: 450, date: '2026-09-09' },
+  { id: 7, lat: 13.0827, lng: 80.2707, district: 'Chennai, TN', substance: 'Heroin', weight: 780, date: '2026-09-08' },
+  { id: 8, lat: 22.5726, lng: 88.3639, district: 'Kolkata, WB', substance: 'Cannabis', weight: 18600, date: '2026-09-07' },
+  { id: 9, lat: 24.5854, lng: 73.7125, district: 'Udaipur, RJ', substance: 'Opium', weight: 4200, date: '2026-09-06' },
+  { id: 10, lat: 32.7266, lng: 74.8570, district: 'Jammu, J&K', substance: 'Heroin', weight: 1200, date: '2026-09-05' },
+  { id: 11, lat: 26.2006, lng: 92.9376, district: 'Guwahati, AS', substance: 'Cannabis', weight: 8900, date: '2026-09-04' },
+  { id: 12, lat: 23.2599, lng: 77.4126, district: 'Bhopal, MP', substance: 'Methamphetamine', weight: 320, date: '2026-09-03' },
+];
+
+// ─── Demo Roles ─────────────────────────────────────────────────
+export const DEMO_ROLES = [
+  {
+    role: 'ncb_io' as const,
+    label: 'Field Officer (IO)',
+    fullTitle: 'Investigating Officer',
+    badge: 'NCB-IO-4092',
+    pin: '7731',
+    name: 'SI Pradeep Sharma',
+    unit: 'NCB Delhi Zonal Unit',
+    color: '#dc2626',
+  },
+  {
+    role: 'ncb_fsl' as const,
+    label: 'Forensic Lab (FSL)',
+    fullTitle: 'Forensic Science Laboratory Analyst',
+    badge: 'FSL-DL-8812',
+    pin: '9044',
+    name: 'Dr. Meena Krishnan',
+    unit: 'CFSL New Delhi',
+    color: '#7c3aed',
+  },
+  {
+    role: 'ncb_zonal' as const,
+    label: 'Zonal Director (HQ)',
+    fullTitle: 'Zonal Director, NCB Headquarters',
+    badge: 'HQ-DIR-0001',
+    pin: '1100',
+    name: 'DIG Rajesh Kumar',
+    unit: 'NCB Headquarters, New Delhi',
+    color: '#0284c7',
+  },
+  {
+    role: 'ncb_court' as const,
+    label: 'NDPS Court Reader',
+    fullTitle: 'Special Court NDPS Act Reader',
+    badge: 'JUD-NDPS-2026',
+    pin: '4432',
+    name: 'Adv. Suresh Patel',
+    unit: 'Special NDPS Court, Patiala House',
+    color: '#138808',
+  },
+];
+
+export type NCBRole = (typeof DEMO_ROLES)[number]['role'];
