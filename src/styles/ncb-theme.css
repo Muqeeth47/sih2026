@@ -1,0 +1,307 @@
+/* ================================================================
+   DRUG-SEAL AI — NCB Theme CSS
+   UX4G v2.0.8 + GIGW 3.0 + WCAG 2.1 AA compliant design tokens
+   Ministry of Home Affairs | Narcotics Control Bureau
+   ================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
+
+/* ─── CSS Custom Properties ─────────────────────────────────── */
+:root {
+  /* NCB & National Tricolor Palette */
+  --ncb-navy-dark: #0a192f;        /* Deep Tactical Navy (Header & Sidebar) */
+  --ncb-navy-primary: #17375e;     /* National Ashoka Navy */
+  --ncb-blue-accent: #0284c7;      /* Interactive Focus & Links */
+  --ncb-saffron: #ff9933;          /* India Saffron (Accents & Warnings) */
+  --ncb-green: #138808;            /* India Green (Positive Chemical Match) */
+  --ncb-green-subtle: #e8f5e9;     /* Verified Pill Fill */
+  --ncb-crimson: #dc2626;          /* Danger / Seizure Threshold Breach */
+  --ncb-crimson-subtle: #fef2f2;   /* Alert Fill */
+  --ncb-gold: #f59e0b;             /* High Purity / Badge Highlight */
+  --ncb-amber: #d97706;            /* Pending / Queued */
+  --ncb-amber-subtle: #fff7ed;     /* Warning Background */
+
+  /* Neutral Surfaces & Ink */
+  --ncb-bg: #f8fafc;               /* Slate Canvas */
+  --ncb-surface: #ffffff;          /* Card Container */
+  --ncb-surface-2: #f1f5f9;        /* Input Backdrop */
+  --ncb-border: #cbd5e1;           /* Crisp Field Outlines */
+  --ncb-border-subtle: #e2e8f0;    /* Subtle dividers */
+  --ncb-text-main: #0f172a;        /* 100% High Contrast Ink */
+  --ncb-text-muted: #475569;       /* Secondary Captions */
+  --ncb-text-subtle: #94a3b8;      /* Placeholder / Disabled */
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.06);
+  --shadow-navy: 0 8px 24px rgba(10, 25, 47, 0.35);
+  --shadow-green: 0 4px 16px rgba(19, 136, 8, 0.25);
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-blur: blur(12px);
+
+  /* Sizing & Layout Tokens */
+  --sidebar-width: 250px;
+  --sidebar-collapsed-width: 64px;
+  --header-height: 68px;
+  --mobile-nav-height: 62px;
+  --accessibility-bar-height: 36px;
+  --tricolor-strip-height: 4px;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* Typography */
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ncb-text-main);
+  background-color: var(--ncb-bg);
+}
+
+/* ─── Tricolor Strip ─────────────────────────────────────────── */
+.tricolor-strip {
+  display: flex;
+  height: var(--tricolor-strip-height);
+  width: 100%;
+  flex-shrink: 0;
+}
+.tricolor-strip .saffron { flex: 1; background: #ff9933; }
+.tricolor-strip .white   { flex: 1; background: #ffffff; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+.tricolor-strip .green   { flex: 1; background: #138808; }
+
+/* ─── Accessibility Bar ──────────────────────────────────────── */
+.accessibility-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: var(--accessibility-bar-height);
+  padding: 0 1.25rem;
+  background: var(--ncb-navy-dark);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.75);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+}
+.accessibility-bar .a11y-label {
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-right: 0.25rem;
+}
+.accessibility-bar button {
+  padding: 0.1rem 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+.accessibility-bar button:hover,
+.accessibility-bar button[aria-pressed="true"] {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.accessibility-bar .a11y-divider {
+  color: rgba(255, 255, 255, 0.2);
+  margin: 0 0.25rem;
+}
+.accessibility-bar .ms-auto {
+  margin-left: auto;
+}
+
+/* ─── Skip Link (GIGW Mandatory) ─────────────────────────────── */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background: var(--ncb-navy-primary);
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  transition: top 0.15s;
+}
+.skip-link:focus {
+  top: 0.5rem;
+}
+
+/* ─── Scrollbar Styling ──────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--ncb-surface-2); }
+::-webkit-scrollbar-thumb { background: var(--ncb-border); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--ncb-text-subtle); }
+
+/* ─── Focus Ring (WCAG AA) ───────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--ncb-blue-accent);
+  outline-offset: 2px;
+}
+
+/* ─── Animations ─────────────────────────────────────────────── */
+@keyframes ncb-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@keyframes ncb-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes ncb-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ncb-slide-in-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes ncb-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes ncb-emblem-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(245, 158, 11, 0.6), 0 0 80px rgba(245, 158, 11, 0.2); }
+}
+@keyframes ncb-scan-line {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+@keyframes ncb-counter {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in   { animation: ncb-fade-in 0.4s ease both; }
+.animate-scale-in  { animation: ncb-scale-in 0.3s ease both; }
+.animate-pulse-ncb { animation: ncb-pulse 2s ease-in-out infinite; }
+.animate-spin-ncb  { animation: ncb-spin 1s linear infinite; }
+
+/* ─── Confidence Pills ───────────────────────────────────────── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.7rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.pill-green  { background: var(--ncb-green-subtle);  color: var(--ncb-green); border: 1px solid #a7f3d0; }
+.pill-red    { background: var(--ncb-crimson-subtle); color: var(--ncb-crimson); border: 1px solid #fecaca; }
+.pill-amber  { background: var(--ncb-amber-subtle);  color: var(--ncb-amber); border: 1px solid #fed7aa; }
+.pill-navy   { background: #eff6ff; color: var(--ncb-navy-primary); border: 1px solid #bfdbfe; }
+
+/* ─── Viewfinder Reticle ─────────────────────────────────────── */
+.viewfinder-reticle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40%;
+  aspect-ratio: 1.618;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.viewfinder-reticle::before,
+.viewfinder-reticle::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--ncb-saffron);
+  border-style: solid;
+}
+.viewfinder-reticle::before {
+  top: 0; left: 0;
+  border-width: 3px 0 0 3px;
+}
+.viewfinder-reticle::after {
+  bottom: 0; right: 0;
+  border-width: 0 3px 3px 0;
+}
+/* Corner TL & BR via box-shadow trick using inner spans */
+.reticle-corner-tr {
+  position: absolute; top: 0; right: 0;
+  width: 20px; height: 20px;
+  border-top: 3px solid var(--ncb-saffron);
+  border-right: 3px solid var(--ncb-saffron);
+}
+.reticle-corner-bl {
+  position: absolute; bottom: 0; left: 0;
+  width: 20px; height: 20px;
+  border-bottom: 3px solid var(--ncb-saffron);
+  border-left: 3px solid var(--ncb-saffron);
+}
+
+/* ─── NCB Emblem Badge ───────────────────────────────────────── */
+.ncb-emblem-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ncb-gold) 0%, #b45309 100%);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+  flex-shrink: 0;
+}
+
+/* ─── Offline Banner ─────────────────────────────────────────── */
+.offline-banner {
+  position: fixed;
+  bottom: calc(var(--mobile-nav-height) + 12px);
+  left: 1rem;
+  right: 1rem;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--ncb-amber-subtle);
+  border: 1px solid var(--ncb-amber);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 10px 25px rgba(217, 119, 6, 0.2);
+  z-index: 9999;
+}
+
+@media (min-width: 901px) {
+  .offline-banner {
+    bottom: 12px;
+    right: 1.5rem;
+    left: auto;
+    width: 380px;
+    margin: 0;
+  }
+}
+
+/* ─── Responsive Helpers ─────────────────────────────────────── */
+.desktop-only { display: block; }
+.mobile-only  { display: none; }
+
+@media (max-width: 900px) {
+  .desktop-only { display: none !important; }
+  .mobile-only  { display: block !important; }
+}
+
+/* ─── Print styles (for Panchnama PDF preview) ──────────────── */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; font-size: 12pt; }
+}
