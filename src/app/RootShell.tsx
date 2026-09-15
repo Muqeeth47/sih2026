@@ -11,7 +11,7 @@ import Footer from '@/components/layout/Footer';
 import SplashScreen from '@/components/shared/SplashScreen';
 import OfflineSyncBadge from '@/components/shared/OfflineSyncBadge';
 
-const PUBLIC_PATHS = ['/', '/login', '/about', '/terms', '/privacy'];
+const PUBLIC_PATHS = ['/', '/login', '/about', '/terms', '/privacy', '/architecture'];
 
 export default function RootShell({ children }: { children: React.ReactNode }) {
   const [splashDone, setSplashDone] = useState(false);

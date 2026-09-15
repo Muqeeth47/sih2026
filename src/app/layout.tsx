@@ -22,26 +22,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        {/* Google Translate Widget */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              function googleTranslateElementInit() {
-                new google.translate.TranslateElement({
-                  pageLanguage: 'en',
-                  includedLanguages: 'hi,en',
-                  layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-                  autoDisplay: false,
-                  gaTrack: false,
-                }, 'google_translate_element');
-              }
-            `,
-          }}
-        />
-        <script
-          src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
-          async
-        />
         {/* Noto Sans font */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

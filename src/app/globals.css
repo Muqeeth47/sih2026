@@ -20,29 +20,48 @@ body {
   top: 0px !important;
 }
 
-/* Google Translate Widget Styling */
-.goog-te-gadget {
-  font-family: 'Noto Sans', sans-serif !important;
-  font-size: 11px !important;
-  color: #475569 !important;
-}
+/* ─── Google Translate suppression ────────────────────────────────────────── */
+/* The widget itself is positioned off-screen in AccessibilityBar.tsx.        */
+/* These rules provide a CSS belt-and-suspenders defense against any          */
+/* visible Google Translate chrome bleeding into the UI.                      */
 
-.goog-te-gadget .goog-te-combo {
-  margin: 0 !important;
-  padding: 2px 6px !important;
-  font-size: 11px !important;
-  border-radius: 4px !important;
-  border: 1px solid #cbd5e1 !important;
-  background: #ffffff !important;
-  color: #0f172a !important;
-  outline: none !important;
-  cursor: pointer !important;
-}
-
-.goog-te-gadget > span,
-.goog-te-banner-frame.skiptranslate,
+#google_translate_element,
+.goog-te-gadget,
+.goog-te-gadget *,
 .goog-te-banner-frame,
-#goog-gt-tt {
-  display: none !important;
+.goog-te-balloon-frame,
+#goog-gt-tt,
+.goog-tooltip,
+.goog-tooltip-content,
+.goog-tooltip-decoration,
+.goog-te-ftab-link,
+.goog-te-menu-frame {
   visibility: hidden !important;
+  pointer-events: none !important;
+  max-height: 0 !important;
+  max-width: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Prevent Google Translate from pushing page content down 40px */
+body.translated-ltr,
+body.translated-rtl {
+  top: 0px !important;
+  position: relative !important;
+}
+
+/* ─── Language dropdown animation ─────────────────────────────────────────── */
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Accessibility bar responsive helpers ─────────────────────────────────── */
+/* On screens >= 640px show the MHA label and pipe separator */
+@media (min-width: 640px) {
+  :root {
+    --bar-sep-display: inline;
+    --bar-mha-display: inline;
+  }
 }

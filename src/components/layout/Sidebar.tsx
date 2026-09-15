@@ -2,19 +2,23 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Camera, FileText, ShieldCheck, MapPin, Scale, Settings, ChevronLeft, ChevronRight, HelpCircle
+  Camera, FileText, ShieldCheck, MapPin, Scale, Settings,
+  ChevronLeft, ChevronRight, HelpCircle, LayoutDashboard, Map, User
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
 const NAV_ITEMS = [
-  { icon: Camera,      label: 'Live Scanner',     href: '/scanner',    roles: ['ncb_io'] },
-  { icon: FileText,    label: 'NDPS Panchnama',   href: '/panchnama',  roles: ['ncb_io', 'ncb_zonal'] },
-  { icon: ShieldCheck, label: 'Evidence Vault',   href: '/vault',      roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
-  { icon: MapPin,      label: 'Zonal Dashboard',  href: '/analytics',  roles: ['ncb_fsl', 'ncb_zonal'] },
-  { icon: Scale,       label: 'NDPS Legal Lib',   href: '/legal',      roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
-  { icon: Settings,    label: 'Calibration',      href: '/settings',   roles: ['ncb_fsl'] },
-  { icon: HelpCircle,  label: 'How to Use',       href: '/how-to-use', roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
+  { icon: LayoutDashboard, label: 'Overview',        href: '/overview',      roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
+  { icon: Camera,          label: 'Live Scanner',    href: '/scanner',       roles: ['ncb_io'] },
+  { icon: FileText,        label: 'NDPS Panchnama',  href: '/panchnama',     roles: ['ncb_io', 'ncb_zonal'] },
+  { icon: ShieldCheck,     label: 'Evidence Vault',  href: '/vault',         roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
+  { icon: MapPin,          label: 'Zonal Dashboard', href: '/analytics',     roles: ['ncb_fsl', 'ncb_zonal'] },
+  { icon: Scale,           label: 'NDPS Legal Lib',  href: '/legal',         roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
+  { icon: Settings,        label: 'Calibration',     href: '/settings',      roles: ['ncb_fsl'] },
+  { icon: HelpCircle,      label: 'How to Use',      href: '/how-to-use',    roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
+  { icon: User,            label: 'My Profile',      href: '/profile',       roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
+  { icon: Map,             label: 'Architecture',    href: '/architecture',  roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
 ] as const;
 
 export default function Sidebar() {

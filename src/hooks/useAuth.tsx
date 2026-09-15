@@ -218,8 +218,8 @@ export function useAuth(): AuthContextValue {
 
 /** Route permission mapping per role */
 export const ROLE_HOME_ROUTES: Record<NCBRole, string> = {
-  ncb_io:     '/scanner',
-  ncb_fsl:    '/vault',
-  ncb_zonal:  '/analytics',
-  ncb_court:  '/vault',
+  ncb_io:     '/overview',
+  ncb_fsl:    '/overview',
+  ncb_zonal:  '/overview',
+  ncb_court:  '/overview',
 };
