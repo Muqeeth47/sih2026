@@ -90,6 +90,8 @@ export interface ScanResult {
   photoHash: string;
   /** Base64 JPEG of the captured frame */
   photoDataUrl?: string;
+  /** Supabase Storage public URL (set after vault commit) */
+  photoUrl?: string;
   gps: GPSCoordinate;
   /** Gemini AI analysis result (when online) */
   aiAnalysis?: AIAnalysisResult | null;
@@ -109,6 +111,17 @@ export interface GPSCoordinate {
 }
 
 export interface AIAnalysisResult {
+  /** Qualitative verdict from Gemini image validation */
+  verdict?: 'ACCEPTED' | 'REJECTED';
+  /** Why Gemini rejected the image (blurry, no kit, glare, etc.) */
+  rejectReason?: string;
+  /** Qualitative colour description observed by Gemini */
+  observedColor?: string;
+  /** Kit type read from label (e.g. "NIK Test A") */
+  kitType?: string;
+  /** Qualitative substance class only — no lab-only quantitative claims */
+  substanceClass?: string;
+  /** Legacy fields kept for backward compat */
   substance: string;
   confidence: number;
   purity?: string;

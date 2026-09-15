@@ -1,84 +1,71 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { AIAnalysisResult } from '@/types/drug';
 
+// ── Gemini models to try in order (free-tier compatible) ──────────────────────
+const MODELS_TO_TRY = [
+  'gemini-1.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-pro',
+];
+
+// ── Per-reagent forensic context for the prompt ───────────────────────────────
 const REAGENT_CRITERIA: Record<string, { targetDrug: string; expectedColor: string; notes: string }> = {
-  marquis: {
-    targetDrug: 'Opiates (Heroin/Morphine) OR Methamphetamine/MDMA/Fentanyl',
-    expectedColor: 'Deep Violet/Purple for Opiates; Orange to Dark Brown/Black for Meth/MDMA',
-    notes: 'No color change means Negative. Yellowish is inconclusive.',
-  },
-  scott: {
-    targetDrug: 'Cocaine / Crack',
-    expectedColor: 'Cobalt Blue precipitate in lower layer with pinkish top',
-    notes: 'Must see distinct cobalt blue flakes/precipitate.',
-  },
-  duquenois_levine: {
-    targetDrug: 'Cannabis / Hashish / THC',
-    expectedColor: 'Biphasic separation with deep violet/indigo in the bottom chloroform layer',
-    notes: 'Top layer must remain clear to pinkish.',
-  },
-  ehrlich: {
-    targetDrug: 'LSD / Indole Alkaloids',
-    expectedColor: 'Purple / Indigo color transition within 2-3 minutes',
-    notes: 'Slow gradual color development.',
-  },
-  mandelin: {
-    targetDrug: 'Ketamine / Amphetamines',
-    expectedColor: 'Deep Olive Green for Ketamine; Orange-Brown for Amphetamines',
-    notes: 'Check for dark green hue.',
-  },
-  mecke: {
-    targetDrug: 'Heroin / Opiates / MDMA',
-    expectedColor: 'Blue-Green for Heroin; Blue-Black for MDMA',
-    notes: 'Rapid dark color transition.',
-  },
-  froehde: {
-    targetDrug: 'Heroin / Morphine / Psychedelics',
-    expectedColor: 'Purple for Heroin; Blue-Green for Psychedelics',
-    notes: 'Watch for distinctive purple formation.',
-  },
-  dille_koppanyi: {
-    targetDrug: 'Barbiturates (Phenobarbital/Secobarbital)',
-    expectedColor: 'Red-Violet color reaction',
-    notes: 'Distinct red-violet hue required.',
-  },
-  nitric_acid: {
-    targetDrug: 'Heroin / Cocaine',
-    expectedColor: 'Yellow-Orange for Heroin; Orange-Red for Cocaine',
-    notes: 'Acidic reaction.',
-  },
+  marquis:          { targetDrug: 'Opiates / Heroin / MDMA / Methamphetamine', expectedColor: 'Deep purple-to-black for opiates; orange-brown for meth', notes: 'No colour change = Negative.' },
+  scott:            { targetDrug: 'Cocaine / Crack', expectedColor: 'Cobalt blue precipitate in lower layer', notes: 'Must see distinct cobalt-blue flakes.' },
+  duquenois_levine: { targetDrug: 'Cannabis / Hashish / THC', expectedColor: 'Deep violet/indigo in bottom chloroform layer', notes: 'Top layer must remain clear-pinkish.' },
+  ehrlich:          { targetDrug: 'LSD / Indole Alkaloids', expectedColor: 'Gradual purple/indigo within 2–3 minutes', notes: 'Slow colour development required.' },
+  mandelin:         { targetDrug: 'Ketamine / Amphetamines', expectedColor: 'Deep olive-green for ketamine; black for amphetamines', notes: 'Check for dark-green hue.' },
+  mecke:            { targetDrug: 'Heroin / MDMA', expectedColor: 'Blue-green for heroin; blue-black for MDMA', notes: 'Rapid dark colour transition.' },
+  froehde:          { targetDrug: 'Heroin / Psychedelics', expectedColor: 'Purple for heroin; blue-green for psychedelics', notes: 'Watch for distinctive purple.' },
+  dille_koppanyi:   { targetDrug: 'Barbiturates', expectedColor: 'Red-violet colour reaction', notes: 'Distinct red-violet hue required.' },
+  nitric_acid:      { targetDrug: 'Heroin / Cocaine', expectedColor: 'Yellow-orange for heroin; orange-red for cocaine', notes: 'Acidic reaction.' },
 };
 
 export function buildGeminiPrompt(reagentType: string): string {
   const criteria = REAGENT_CRITERIA[reagentType.toLowerCase()] || REAGENT_CRITERIA.marquis;
 
   return `
-You are a senior forensic chemist auditing a field narcotics spot test for the Narcotics Control Bureau (NCB), Ministry of Home Affairs, India.
-TESTING PROTOCOL: ${reagentType.toUpperCase()} REAGENT
+You are a forensic image validator for DRUG-SEAL AI — a field narcotics identification system used by India's Narcotics Control Bureau.
+
+REAGENT BEING TESTED: ${reagentType.toUpperCase()}
 TARGET SUBSTANCE: ${criteria.targetDrug}
-EXPECTED PASSING REACTION: ${criteria.expectedColor}
-SPECIAL REVIEWER NOTE: ${criteria.notes}
+EXPECTED POSITIVE COLOUR: ${criteria.expectedColor}
+NOTES: ${criteria.notes}
 
-TASK:
-1. Examine the liquid inside the test pouch/tube.
-2. Determine if the color shift matches the official UNODC criteria for ${reagentType.toUpperCase()}.
-3. Read batch lot number, expiry date, and kit model text if visible on the pouch.
-4. Flag any seal tampering or expired kits.
-5. Provide estimated purity and adulterants if evident.
-6. Give a formal court-admissible panchnama summary statement under Section 52 NDPS Act.
-7. Keep 'reason' strictly under 40 characters.
+═══ STEP 1 — IMAGE VALIDATION (check FIRST) ═══
+REJECT the image immediately if ANY of these are true:
+  • The image is blurry or out-of-focus (reagent chamber unreadable)
+  • Severe specular glare obscures the fluid colour
+  • No drug test pouch / kit is visible in the image
+  • The reagent fluid chamber is hidden, empty, or not reacted yet
+  • The image is of an unrelated object (road, person, etc.)
 
-Return strictly JSON conforming to this structure:
+═══ STEP 2 — IF ACCEPTED, OBSERVE ONLY ═══
+Report strictly what you can SEE in the image:
+  • Describe the fluid colour qualitatively (e.g. "deep violet-purple")
+  • State whether the colour matches the expected positive reaction
+  • Read kit label, lot number, and expiry date ONLY if the text is clearly legible
+  • Note any visible seal damage or tamper evidence on the packaging
+  
+DO NOT invent, guess, or extrapolate:
+  ✗ No purity percentages
+  ✗ No adulterant lists
+  ✗ No chemical concentration claims
+  ✗ No lab-instrument data
+
+═══ OUTPUT — Strict JSON only ═══
+Return ONLY a valid JSON object conforming to this exact structure:
 {
-  "substance": "string",
-  "confidence": number between 0 and 1,
-  "purity": "string range like 70-75%",
-  "adulterants": ["string"],
-  "tamperDetected": boolean,
+  "verdict": "ACCEPTED" or "REJECTED",
+  "rejectReason": "string or null — reason if REJECTED, e.g. Blurry image / No test kit visible",
+  "kitType": "string or null — kit brand/type if legible on label",
+  "observedColor": "string — qualitative colour description of the fluid",
+  "substanceClass": "string — qualitative match e.g. Opiates/Alkaloids, Cocaine derivative, or Negative",
+  "tamperDetected": true or false,
   "pouchLotNumber": "string or null",
   "pouchExpiry": "string or null",
-  "courtSummary": "string",
-  "reason": "string under 40 chars"
+  "courtSummary": "One formal sentence for NDPS Act Sec. 52 panchnama, describing the observable reaction only. If REJECTED write: Image rejected — officer directed to retake."
 }
 `.trim();
 }
@@ -88,149 +75,116 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { imageBase64, reagentType } = body;
 
+    if (!imageBase64) {
+      return NextResponse.json({ success: false, error: 'No image data received.' }, { status: 400 });
+    }
+
     const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json({
+        success: false,
+        error: 'Gemini API key not configured. Add GEMINI_API_KEY to .env.local',
+      }, { status: 500 });
+    }
+
     const promptText = buildGeminiPrompt(reagentType || 'marquis');
+    const base64Data = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
 
-    // If API key is present, attempt live multimodal Gemini 3.6 Flash inference
-    if (apiKey) {
-      const modelsToTry = ['gemini-3.6-flash', 'gemini-flash-latest'];
-      for (const model of modelsToTry) {
-        try {
-          const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [
-                  {
-                    parts: [
-                      { text: promptText },
-                      {
-                        inline_data: {
-                          mime_type: 'image/jpeg',
-                          data: imageBase64.replace(/^data:image\/[a-z]+;base64,/, ''),
-                        },
+    // Try each model in order until one succeeds
+    let lastError = '';
+    for (const model of MODELS_TO_TRY) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    { text: promptText },
+                    {
+                      inline_data: {
+                        mime_type: 'image/jpeg',
+                        data: base64Data,
                       },
-                    ],
-                  },
-                ],
-                generationConfig: {
-                  responseMimeType: 'application/json',
+                    },
+                  ],
                 },
-              }),
-            }
-          );
-
-          if (response.ok) {
-            const data = await response.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (text) {
-              const parsed = JSON.parse(text) as AIAnalysisResult;
-              return NextResponse.json({ success: true, analysis: parsed, source: model });
-            }
+              ],
+              generationConfig: {
+                responseMimeType: 'application/json',
+                temperature: 0.1,   // Low temperature for deterministic forensic output
+                maxOutputTokens: 400,
+              },
+            }),
           }
-        } catch (err) {
-          console.warn(`Gemini attempt on ${model} failed, trying fallback:`, err);
+        );
+
+        if (!response.ok) {
+          const errText = await response.text();
+          lastError = `${model}: HTTP ${response.status} — ${errText.slice(0, 200)}`;
+          console.warn(`[drug-review] ${lastError}`);
+          continue; // try next model
         }
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!text) {
+          lastError = `${model}: Empty response from Gemini`;
+          continue;
+        }
+
+        // Parse Gemini JSON
+        let parsed: any;
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          // Sometimes Gemini wraps in ```json ... ``` even with responseMimeType set
+          const jsonMatch = text.match(/\{[\s\S]*\}/);
+          if (!jsonMatch) {
+            lastError = `${model}: Could not parse JSON from response`;
+            continue;
+          }
+          parsed = JSON.parse(jsonMatch[0]);
+        }
+
+        // Map to AIAnalysisResult
+        const analysis: AIAnalysisResult = {
+          verdict:       parsed.verdict ?? 'ACCEPTED',
+          rejectReason:  parsed.rejectReason ?? null,
+          kitType:       parsed.kitType ?? null,
+          observedColor: parsed.observedColor ?? 'Not observed',
+          substanceClass: parsed.substanceClass ?? null,
+          tamperDetected: parsed.tamperDetected ?? false,
+          pouchLotNumber: parsed.pouchLotNumber ?? null,
+          pouchExpiry:   parsed.pouchExpiry ?? null,
+          courtSummary:  parsed.courtSummary ?? '',
+          // Legacy fields filled from qualitative data only
+          substance:     parsed.substanceClass ?? 'Field observation — see court summary',
+          confidence:    parsed.verdict === 'ACCEPTED' ? 0.9 : 0.0,
+        };
+
+        return NextResponse.json({ success: true, analysis, source: model });
+
+      } catch (err: any) {
+        lastError = `${model}: ${err?.message ?? 'Unknown error'}`;
+        console.warn(`[drug-review] Gemini attempt failed:`, lastError);
       }
     }
 
-    // Smart Fallback when no API Key is set or network fails
-    const mockMap: Record<string, Partial<AIAnalysisResult>> = {
-      marquis: {
-        substance: 'Heroin (Diacetylmorphine)',
-        confidence: 0.94,
-        purity: '62–68%',
-        adulterants: ['Caffeine', 'Paracetamol'],
-        pouchLotNumber: 'LOT-MQ-2024-089',
-        reason: 'Violet-black opiate reaction',
-        courtSummary:
-          'Marquis reagent reaction exhibited immediate purple-to-black coloration consistent with opiates (heroin). Colorimetric absorption conforms to UNODC ST/NAR/13 standard. No packet seal tampering detected.',
-      },
-      scott: {
-        substance: 'Cocaine Hydrochloride',
-        confidence: 0.92,
-        purity: '78–82%',
-        adulterants: ['Lidocaine', 'Levamisole'],
-        pouchLotNumber: 'LOT-SC-2025-014',
-        reason: 'Cobalt blue lower precipitate',
-        courtSummary:
-          'Scott reagent test produced cobalt blue precipitate in phase 1, soluble in chloroform layer in phase 3. Conforms to UNODC Section 4.3 standards for cocaine HCl.',
-      },
-      duquenois_levine: {
-        substance: 'Cannabis Resin / Hashish',
-        confidence: 0.96,
-        purity: 'High Active Cannabinoid Profile',
-        adulterants: ['Henna residues', 'Binding wax'],
-        pouchLotNumber: 'LOT-DL-2024-411',
-        reason: 'Violet chloroform layer',
-        courtSummary:
-          'Duquenois-Levine test developed deep violet hue transferred to bottom chloroform layer. Confirms presence of Tetrahydrocannabinol (THC) under Section 20 NDPS Act.',
-      },
-      ehrlich: {
-        substance: 'LSD (Lysergic Acid Diethylamide)',
-        confidence: 0.91,
-        purity: 'Trace Blotter Dose',
-        adulterants: ['Cellulose carrier'],
-        pouchLotNumber: 'LOT-EH-2025-002',
-        reason: 'Indigo-purple indole shift',
-        courtSummary:
-          'Ehrlich reaction developed signature indigo-violet hue within 150 seconds, confirming indole nucleus characteristic of Schedule I LSD.',
-      },
-      mandelin: {
-        substance: 'Ketamine Hydrochloride',
-        confidence: 0.89,
-        purity: '84–88%',
-        adulterants: ['MSG', 'Lactose'],
-        pouchLotNumber: 'LOT-MD-2025-104',
-        reason: 'Deep olive green hue',
-        courtSummary:
-          'Mandelin reagent generated deep olive green hue conforming to UNODC criteria for ketamine anesthetic derivatives.',
-      },
-      dille_koppanyi: {
-        substance: 'Phenobarbital Barbiturate',
-        confidence: 0.90,
-        purity: 'Pharmaceutical grade',
-        adulterants: ['Starch binder'],
-        pouchLotNumber: 'LOT-DK-2024-055',
-        reason: 'Red-violet barbiturate shift',
-        courtSummary:
-          'Dille-Koppanyi two-part test produced distinct red-violet coloration denoting barbituric acid ring structure.',
-      },
-    };
-
-    const fallback = mockMap[reagentType] || {
-      substance: 'Suspected Controlled Substance',
-      confidence: 0.85,
-      purity: 'Indeterminate in field',
-      adulterants: ['Common cutting agents'],
-      pouchLotNumber: 'LOT-GEN-2025',
-      reason: 'Colorimetric shift detected',
-      courtSummary: `Colorimetric reaction observed under ${reagentType} reagent indicates presence of target schedule narcotic substance.`,
-    };
-
-    const result: AIAnalysisResult = {
-      substance: fallback.substance || 'Unknown Substance',
-      confidence: fallback.confidence || 0.8,
-      purity: fallback.purity,
-      adulterants: fallback.adulterants || [],
-      tamperDetected: false,
-      pouchLotNumber: fallback.pouchLotNumber,
-      pouchExpiry: '2027-12',
-      reason: fallback.reason || 'Conforms to reagent criteria',
-      courtSummary: fallback.courtSummary || '',
-      batchId: `NCB-AI-${Date.now().toString(36).toUpperCase()}`,
-    };
-
+    // All models failed — no silent fallback, return an honest error
     return NextResponse.json({
-      success: true,
-      analysis: result,
-      source: apiKey ? 'gemini-fallback' : 'offline-simulated-forensics',
-    });
-  } catch (error) {
+      success: false,
+      error: `Gemini unavailable. Last error: ${lastError}. Ensure GEMINI_API_KEY is valid and try again.`,
+    }, { status: 503 });
+
+  } catch (error: any) {
+    console.error('[drug-review] Unhandled error:', error);
     return NextResponse.json(
-      { success: false, error: (error as Error).message },
+      { success: false, error: error?.message ?? 'Internal server error' },
       { status: 500 }
     );
   }
