@@ -70,10 +70,31 @@ export async function generateAssayPDF(result: ScanResult): Promise<void> {
   const detailsX = margin + photoSize + 4;
   const detailsW = contentW - photoSize - 4;
 
+  const rawPhoto = result.photoDataUrl || result.photoUrl;
+  let resolvedPhoto: string | null = null;
+  if (rawPhoto) {
+    if (rawPhoto.startsWith('data:image')) {
+      resolvedPhoto = rawPhoto;
+    } else {
+      try {
+        const res = await fetch(rawPhoto);
+        const blob = await res.blob();
+        resolvedPhoto = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+      } catch {
+        resolvedPhoto = null;
+      }
+    }
+  }
+
   let photoRendered = false;
-  if (result.photoDataUrl && result.photoDataUrl.startsWith('data:image')) {
+  if (resolvedPhoto && resolvedPhoto.startsWith('data:image')) {
     try {
-      doc.addImage(result.photoDataUrl, 'JPEG', photoX, y, photoSize, photoSize);
+      const format = resolvedPhoto.includes('image/png') ? 'PNG' : 'JPEG';
+      doc.addImage(resolvedPhoto, format, photoX, y, photoSize, photoSize);
       doc.setDrawColor(15, 92, 168);
       doc.setLineWidth(0.3);
       doc.rect(photoX, y, photoSize, photoSize);

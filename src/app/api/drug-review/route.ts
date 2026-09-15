@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { AIAnalysisResult } from '@/types/drug';
 
-// ── Gemini models to try in order (free-tier compatible) ──────────────────────
+export const maxDuration = 60;
+
+// ── Gemini models to try in order (free-tier compatible, fastest first) ────────
 const MODELS_TO_TRY = [
-  'gemini-3.6-flash',
-  'gemini-3.5-flash',
+  'gemini-1.5-flash',
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash-8b',
   'gemini-3.5-flash-lite',
-  'gemini-3.1-flash-lite',
-  'gemini-flash-lite-latest',
 ];
 
 // ── Per-reagent forensic context for the prompt ───────────────────────────────
@@ -80,11 +82,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'No image data received.' }, { status: 400 });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const rawKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+    const apiKey = rawKey.trim().replace(/^["']|["']$/g, '');
     if (!apiKey) {
+      console.error('[drug-review] GEMINI_API_KEY is not configured in environment variables');
       return NextResponse.json({
         success: false,
-        error: 'Gemini API key not configured. Add GEMINI_API_KEY to .env.local',
+        error: 'Gemini API key not configured. Add GEMINI_API_KEY to your environment variables.',
       }, { status: 500 });
     }
 
@@ -102,6 +106,7 @@ export async function POST(req: NextRequest) {
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            signal: AbortSignal.timeout(4000), // 4s timeout per attempt so it fails fast
             body: JSON.stringify({
               contents: [
                 {
@@ -119,7 +124,7 @@ export async function POST(req: NextRequest) {
               generationConfig: {
                 responseMimeType: 'application/json',
                 temperature: 0.1,   // Low temperature for deterministic forensic output
-                maxOutputTokens: 2048,
+                maxOutputTokens: 512, // Compact forensic JSON
               },
             }),
           }

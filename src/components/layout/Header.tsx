@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Shield, Wifi, WifiOff, LogOut, Menu, X } from 'lucide-react';
+import { Shield, Wifi, WifiOff, LogOut, Menu, X, FlaskConical, Building2, Scale } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import OfflineSyncBadge from '@/components/shared/OfflineSyncBadge';
 import { useState, useEffect } from 'react';
@@ -13,8 +13,10 @@ interface HeaderProps {
 export default function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const [isOnline, setIsOnline] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     setIsOnline(navigator.onLine);
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -31,7 +33,7 @@ export default function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
       className="sticky top-0 z-50 h-16 bg-white border-b border-slate-200 flex items-center px-3 sm:px-5 gap-2 sm:gap-3 shadow-xs"
     >
       {/* Hamburger Toggle (3 horizontal lines) */}
-      {isAuthenticated && (
+      {mounted && isAuthenticated && (
         <button
           onClick={onMenuToggle}
           style={{
@@ -57,7 +59,7 @@ export default function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
 
       {/* Logo & Identity */}
       <Link
-        href={isAuthenticated ? '/overview' : '/'}
+        href={mounted && isAuthenticated ? '/overview' : '/'}
         style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', textDecoration: 'none', flexShrink: 0 }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -66,6 +68,8 @@ export default function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
             alt="Ministry of Home Affairs, Government of India"
             style={{ height: '32px', width: 'auto', objectFit: 'contain' }}
             className="h-7 sm:h-9"
+            loading="eager"
+            decoding="async"
           />
           <div style={{ width: '1px', height: '22px', background: '#cbd5e1' }} className="hidden sm:block" />
           <img
@@ -73,6 +77,8 @@ export default function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
             alt="Narcotics Control Bureau Emblem"
             style={{ height: '32px', width: 'auto', objectFit: 'contain' }}
             className="h-7 sm:h-9"
+            loading="eager"
+            decoding="async"
           />
         </div>
         <div>
@@ -119,13 +125,61 @@ export default function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
         </span>
       </div>
 
-      {isAuthenticated && (
+      {mounted && isAuthenticated && (
         <>
           <div className="flex-shrink-0">
             <OfflineSyncBadge compact />
           </div>
 
-          {/* User Badge - compact on mobile */}
+          {/* Compact Role Badge - visible on mobile and desktop */}
+          {user && (
+            <Link
+              href={
+                user.role === 'ncb_io' ? '/field/vault' :
+                user.role === 'ncb_fsl' ? '/fsl/vault' :
+                user.role === 'ncb_zonal' ? '/zonal/vault' : '/court/vault'
+              }
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                padding: '0.22rem 0.55rem',
+                borderRadius: '6px',
+                fontSize: '0.7rem',
+                fontWeight: 800,
+                textDecoration: 'none',
+                background:
+                  user.role === 'ncb_io' ? '#e0f2fe' :
+                  user.role === 'ncb_fsl' ? '#ede9fe' :
+                  user.role === 'ncb_zonal' ? '#fef9ec' : '#f0fdf4',
+                color:
+                  user.role === 'ncb_io' ? '#0f5ca8' :
+                  user.role === 'ncb_fsl' ? '#7c3aed' :
+                  user.role === 'ncb_zonal' ? '#b45309' : '#065f46',
+                border: `1px solid ${
+                  user.role === 'ncb_io' ? '#bae6fd' :
+                  user.role === 'ncb_fsl' ? '#ddd6fe' :
+                  user.role === 'ncb_zonal' ? '#fde68a' : '#bbf7d0'
+                }`,
+                flexShrink: 0,
+              }}
+              title="Current Role — click to open Evidence Vault"
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                {user.role === 'ncb_io' && <Shield size={11} />}
+                {user.role === 'ncb_fsl' && <FlaskConical size={11} />}
+                {user.role === 'ncb_zonal' && <Building2 size={11} />}
+                {user.role === 'ncb_court' && <Scale size={11} />}
+                <span>{
+                  user.role === 'ncb_io' ? 'IO' :
+                  user.role === 'ncb_fsl' ? 'FSL' :
+                  user.role === 'ncb_zonal' ? 'ZONAL' : 'COURT'
+                }</span>
+              </span>
+            </Link>
+          )}
+
+          {/* User Badge - expanded on desktop */}
           <div
             className="hidden md:flex items-center gap-2 px-2.5 py-1 bg-slate-50 rounded-lg border border-slate-200"
           >

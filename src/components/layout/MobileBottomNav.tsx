@@ -6,15 +6,33 @@ import { useEffect, useState } from 'react';
 import { getPendingCount } from '@/utils/offlineQueue';
 import { useAuth } from '@/hooks/useAuth';
 
-const ALL_MOBILE_TABS = [
-  { icon: Camera,     label: 'Scanner',   href: '/scanner',    roles: ['ncb_io'] },
-  { icon: FilePlus2,  label: 'Panchnama', href: '/panchnama',  roles: ['ncb_io', 'ncb_zonal'] },
-  { icon: Clock3,     label: 'Vault',     href: '/vault',      roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
-  { icon: MapPin,     label: 'Zonal HQ',  href: '/analytics',  roles: ['ncb_fsl', 'ncb_zonal'] },
-  { icon: Scale,      label: 'Legal',     href: '/legal',      roles: ['ncb_court'] },
-  { icon: Sliders,    label: 'Calibrate', href: '/settings',   roles: ['ncb_fsl'] },
-  { icon: HelpCircle, label: 'Manual',    href: '/how-to-use', roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
-] as const;
+import type { NCBRole } from '@/utils/escalation';
+
+const ROLE_MOBILE_TABS: Record<NCBRole, { icon: React.ElementType; label: string; href: string }[]> = {
+  ncb_io: [
+    { icon: Camera,    label: 'Scanner',   href: '/field/scanner' },
+    { icon: FilePlus2, label: 'Panchnama', href: '/field/panchnama' },
+    { icon: Clock3,    label: 'Vault',     href: '/field/vault' },
+    { icon: HelpCircle,label: 'Manual',    href: '/how-to-use' },
+  ],
+  ncb_fsl: [
+    { icon: Clock3,    label: 'Vault',     href: '/fsl/vault' },
+    { icon: MapPin,    label: 'Map',       href: '/analytics' },
+    { icon: Sliders,   label: 'Calibrate', href: '/fsl/calibration' },
+    { icon: HelpCircle,label: 'Manual',    href: '/how-to-use' },
+  ],
+  ncb_zonal: [
+    { icon: Clock3,    label: 'Vault',     href: '/zonal/vault' },
+    { icon: FilePlus2, label: 'Review',    href: '/zonal/panchnama' },
+    { icon: MapPin,    label: 'Analytics', href: '/zonal/analytics' },
+    { icon: HelpCircle,label: 'Manual',    href: '/how-to-use' },
+  ],
+  ncb_court: [
+    { icon: Clock3,    label: 'Dossiers',  href: '/court/vault' },
+    { icon: Scale,     label: 'Legal',     href: '/court/legal' },
+    { icon: HelpCircle,label: 'Manual',    href: '/how-to-use' },
+  ],
+};
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
@@ -34,9 +52,9 @@ export default function MobileBottomNav() {
     return () => { mounted = false; clearInterval(interval); };
   }, []);
 
-  const visibleTabs = ALL_MOBILE_TABS.filter(tab =>
-    user ? (tab.roles as readonly string[]).includes(user.role) : true
-  );
+  const visibleTabs = user && ROLE_MOBILE_TABS[user.role]
+    ? ROLE_MOBILE_TABS[user.role]
+    : ROLE_MOBILE_TABS.ncb_io;
 
   return (
     <nav

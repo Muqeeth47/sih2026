@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -8,22 +9,35 @@ import {
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
-const NAV_ITEMS = [
-  { icon: LayoutDashboard, label: 'Overview',        href: '/overview',      roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
-  { icon: Camera,          label: 'Live Scanner',    href: '/scanner',       roles: ['ncb_io'] },
-  { icon: FileText,        label: 'NDPS Panchnama',  href: '/panchnama',     roles: ['ncb_io', 'ncb_zonal'] },
-  { icon: ShieldCheck,     label: 'Evidence Vault',  href: '/vault',         roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
-  { icon: MapPin,          label: 'Zonal Dashboard', href: '/analytics',     roles: ['ncb_fsl', 'ncb_zonal'] },
-  { icon: Scale,           label: 'NDPS Legal Lib',  href: '/legal',         roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
-  { icon: Settings,        label: 'Calibration',     href: '/settings',      roles: ['ncb_fsl'] },
-  { icon: HelpCircle,      label: 'How to Use',      href: '/how-to-use',    roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
-  { icon: User,            label: 'My Profile',      href: '/profile',       roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
-  { icon: Map,             label: 'Architecture',    href: '/architecture',  roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
-] as const;
+const NAV_ITEMS: {
+  icon: React.ElementType; label: string; href: string; roles: readonly string[];
+}[] = [
+  { icon: LayoutDashboard, label: 'Overview',          href: '/overview',          roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
+  // Field IO
+  { icon: Camera,          label: 'Live Scanner',      href: '/field/scanner',     roles: ['ncb_io'] },
+  { icon: FileText,        label: 'NDPS Panchnama',    href: '/field/panchnama',   roles: ['ncb_io'] },
+  { icon: ShieldCheck,     label: 'Evidence Vault',    href: '/field/vault',       roles: ['ncb_io'] },
+  // FSL
+  { icon: ShieldCheck,     label: 'FSL Vault',         href: '/fsl/vault',         roles: ['ncb_fsl'] },
+  { icon: MapPin,          label: 'Interdiction Map',   href: '/analytics',         roles: ['ncb_fsl'] },
+  { icon: Settings,        label: 'Calibration',       href: '/fsl/calibration',   roles: ['ncb_fsl'] },
+  // Zonal
+  { icon: ShieldCheck,     label: 'Zonal Vault',       href: '/zonal/vault',       roles: ['ncb_zonal'] },
+  { icon: FileText,        label: 'Panchnama Review',  href: '/zonal/panchnama',   roles: ['ncb_zonal'] },
+  { icon: MapPin,          label: 'Analytics',         href: '/zonal/analytics',   roles: ['ncb_zonal'] },
+  // Court
+  { icon: ShieldCheck,     label: 'Court Dossiers',    href: '/court/vault',       roles: ['ncb_court'] },
+  { icon: Scale,           label: 'Legal Repository',  href: '/court/legal',       roles: ['ncb_court'] },
+  // Shared
+  { icon: Scale,           label: 'NDPS Legal Lib',    href: '/legal',             roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
+  { icon: HelpCircle,      label: 'How to Use',        href: '/how-to-use',        roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
+  { icon: User,            label: 'My Profile',        href: '/profile',           roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
+  { icon: Map,             label: 'Architecture',      href: '/architecture',      roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
+];
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, loginAsRole } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
   const visibleItems = NAV_ITEMS.filter(item =>
@@ -73,7 +87,7 @@ export default function Sidebar() {
       <nav style={{ flex: 1, padding: '0.5rem 0', overflowY: 'auto' }}>
         {visibleItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          const isActive = pathname === item.href || (item.href !== '/overview' && pathname.startsWith(item.href));
 
           return (
             <Link

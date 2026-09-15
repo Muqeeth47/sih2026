@@ -1,32 +1,51 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Shield } from 'lucide-react';
 
 export default function SplashScreen({ onComplete }: { onComplete: () => void }) {
   const [phase, setPhase] = useState<'logo' | 'text' | 'done'>('logo');
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase('text'), 600);
-    const t2 = setTimeout(() => setPhase('done'), 1800);
-    const t3 = setTimeout(onComplete, 2200);
+    const t1 = setTimeout(() => setPhase('text'), 450);
+    const t2 = setTimeout(() => setPhase('done'), 1200);
+    const t3 = setTimeout(() => {
+      onCompleteRef.current?.();
+    }, 1500);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, [onComplete]);
+  }, []); // Run once on mount — never reset by parent re-renders
 
   if (phase === 'done') return null;
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: '#f8fafc',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 9999,
-      gap: '1.5rem',
-      animation: 'none',
-    }}>
+    <div
+      onClick={() => {
+        setPhase('done');
+        onCompleteRef.current?.();
+      }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: '#f8fafc',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        gap: '1.5rem',
+        cursor: 'pointer',
+        userSelect: 'none',
+        animation: 'ncb-splash-exit 0.35s ease 1.5s forwards',
+      }}
+    >
+      <style>{`
+        @keyframes ncb-splash-exit {
+          0% { opacity: 1; }
+          99% { opacity: 0; }
+          100% { opacity: 0; pointer-events: none; visibility: hidden; display: none; }
+        }
+      `}</style>
       {/* Emblems */}
       <div style={{
         display: 'flex',
@@ -99,6 +118,10 @@ export default function SplashScreen({ onComplete }: { onComplete: () => void })
             animation: `ncb-pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
           }} />
         ))}
+      </div>
+
+      <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '0.25rem', fontWeight: 600 }}>
+        Tap anywhere to continue
       </div>
     </div>
   );

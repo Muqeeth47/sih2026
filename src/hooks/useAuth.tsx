@@ -18,6 +18,7 @@ export interface AuthUser {
 interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (badgeOrEmail: string, pinOrPassword: string) => Promise<{ success: boolean; error?: string }>;
   signUp: (
     email: string,
@@ -33,11 +34,12 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Restore session on mount
+  // Restore session on mount (after hydration)
   useEffect(() => {
     try {
-      const stored = sessionStorage.getItem('ncb_auth');
+      const stored = localStorage.getItem('ncb_auth') || sessionStorage.getItem('ncb_auth');
       if (stored) {
         setUser(JSON.parse(stored));
       }
@@ -47,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Check live Supabase session if present
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user && !sessionStorage.getItem('ncb_auth')) {
+      if (session?.user && !localStorage.getItem('ncb_auth') && !sessionStorage.getItem('ncb_auth')) {
         const meta = session.user.user_metadata || {};
         const role = (meta.role as NCBRole) || 'ncb_io';
         const authUser: AuthUser = {
@@ -60,15 +62,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
         persistUser(authUser);
       }
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => {
+      setIsLoading(false);
+    });
   }, []);
 
   const persistUser = (u: AuthUser | null) => {
     setUser(u);
-    if (u) {
-      sessionStorage.setItem('ncb_auth', JSON.stringify(u));
-    } else {
-      sessionStorage.removeItem('ncb_auth');
+    if (typeof window !== 'undefined') {
+      try {
+        if (u) {
+          localStorage.setItem('ncb_auth', JSON.stringify(u));
+          sessionStorage.setItem('ncb_auth', JSON.stringify(u));
+        } else {
+          localStorage.removeItem('ncb_auth');
+          sessionStorage.removeItem('ncb_auth');
+        }
+      } catch {}
     }
   };
 
@@ -199,6 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{
       user,
       isAuthenticated: !!user,
+      isLoading,
       login,
       signUp,
       loginAsRole,

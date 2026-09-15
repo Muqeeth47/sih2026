@@ -69,6 +69,9 @@ export interface PanchnamaForm {
 
   /** SHA-256 hashes of evidence photos */
   evidencePhotoHashes: string[];
+  /** Embedded image Data URLs or URLs of evidence photos */
+  evidencePhotoDataUrls?: string[];
+  evidencePhotoUrls?: string[];
   /** IDs of scan results linked to this panchnama */
   linkedScanIds: string[];
 

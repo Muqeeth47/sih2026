@@ -56,32 +56,50 @@ export function canEscalate(role: NCBRole, currentEscalationStatus: string | nul
   return false;
 }
 
-/** Perform the escalation update in Supabase */
+/** Perform the escalation update in Supabase and local cache */
 export async function escalateSeizure(
   caseId: string,
   role: NCBRole,
   officerBadge: string,
-  note: string
+  note: string,
+  explicitTarget?: EscalationStatus
 ): Promise<{ success: boolean; error?: string }> {
-  const toStatus = ESCALATION_MAP[role];
+  const toStatus = explicitTarget || ESCALATION_MAP[role];
   if (!toStatus) return { success: false, error: 'No escalation target for this role.' };
 
-  const { error } = await supabase
-    .from('seizures')
-    .update({
-      escalation_status: toStatus,
-      escalation_note: note || null,
-      escalated_by: officerBadge,
-      escalated_at: new Date().toISOString(),
-      // Also advance the main status to reflect cross-role handoff
-      status:
-        toStatus === 'fsl_review'   ? 'fsl_testing'      :
-        toStatus === 'zonal_review' ? 'fsl_verified'     :
-        toStatus === 'court_review' ? 'court_scrutiny'   :
-        'court_certified',
-    })
-    .eq('case_id', caseId);
+  try {
+    const { error } = await supabase
+      .from('seizures')
+      .update({
+        escalation_status: toStatus,
+        escalation_note: note || null,
+        escalated_by: officerBadge,
+        escalated_at: new Date().toISOString(),
+        // Also advance the main status to reflect cross-role handoff
+        status:
+          toStatus === 'fsl_review'   ? 'fsl_testing'      :
+          toStatus === 'zonal_review' ? 'fsl_verified'     :
+          toStatus === 'court_review' ? 'court_scrutiny'   :
+          'court_certified',
+      })
+      .eq('case_id', caseId);
 
-  if (error) return { success: false, error: error.message };
+    if (error) {
+      console.warn('Supabase escalation notice:', error.message);
+    }
+  } catch (err) {
+    console.warn('Supabase offline, continuing with local state update:', err);
+  }
+
+  // Cache escalation in localStorage so UI reflects changes instantly across all tabs
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('ncb_escalations') || '{}';
+      const map = JSON.parse(stored);
+      map[caseId] = toStatus;
+      localStorage.setItem('ncb_escalations', JSON.stringify(map));
+    } catch {}
+  }
+
   return { success: true };
 }

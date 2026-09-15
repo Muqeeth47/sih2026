@@ -1,6 +1,6 @@
 'use client';
 // RootShell.tsx — Handles splash screen + layout switching between public/authed views
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import AccessibilityBar from '@/components/layout/AccessibilityBar';
@@ -14,10 +14,31 @@ import OfflineSyncBadge from '@/components/shared/OfflineSyncBadge';
 const PUBLIC_PATHS = ['/', '/login', '/about', '/terms', '/privacy', '/architecture', '/how-to-use'];
 
 export default function RootShell({ children }: { children: React.ReactNode }) {
-  const [splashDone, setSplashDone] = useState(false);
+  const [splashVisible, setSplashVisible] = useState(false);
+
+  useEffect(() => {
+    // Only check sessionStorage after hydration is complete to prevent SSR mismatch
+    try {
+      if (sessionStorage.getItem('ncb_splash_shown') !== '1') {
+        setSplashVisible(true);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleSplashComplete = useCallback(() => {
+    try {
+      sessionStorage.setItem('ncb_splash_shown', '1');
+    } catch {
+      // ignore
+    }
+    setSplashVisible(false);
+  }, []);
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -29,13 +50,14 @@ export default function RootShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Redirect unauthenticated users from protected routes
+  // Redirect unauthenticated users from protected routes once auth state is resolved
   useEffect(() => {
+    if (isLoading) return;
     const isPublic = PUBLIC_PATHS.includes(pathname) || pathname === '/';
     if (!isAuthenticated && !isPublic) {
       router.replace('/login');
     }
-  }, [isAuthenticated, pathname, router]);
+  }, [isAuthenticated, isLoading, pathname, router]);
 
   // Auto-close mobile drawer on route change
   useEffect(() => {
@@ -48,12 +70,9 @@ export default function RootShell({ children }: { children: React.ReactNode }) {
   const showShell = isAuthenticated && !isLoginPage;
   const isPublicPage = !isAuthenticated && (PUBLIC_PATHS.includes(pathname) || pathname === '/');
 
-  if (!splashDone) {
-    return <SplashScreen onComplete={() => setSplashDone(true)} />;
-  }
-
   return (
     <>
+      {splashVisible && <SplashScreen onComplete={handleSplashComplete} />}
       {/* Top chrome: always visible */}
       <AccessibilityBar />
       <Header

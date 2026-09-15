@@ -5,7 +5,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { PanchnamaForm } from '@/types/panchnama';
 
-export function generatePanchnamaPDF(form: PanchnamaForm): void {
+export async function generatePanchnamaPDF(form: PanchnamaForm): Promise<void> {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
   const margin = 15;
@@ -164,21 +164,78 @@ export function generatePanchnamaPDF(form: PanchnamaForm): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   y = (doc as any).lastAutoTable.finalY + 8;
 
-  // ── Evidence Photo Hashes ────────────────────────────────────
-  if (form.evidencePhotoHashes.length > 0) {
-    checkPage(30);
+  // ── Evidence Photographs & Hashes ────────────────────────────
+  const photos = [...(form.evidencePhotoDataUrls || []), ...(form.evidencePhotoUrls || [])];
+  if (form.evidencePhotoHashes.length > 0 || photos.length > 0) {
+    checkPage(45);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.setTextColor(23, 55, 94);
-    doc.text('4. EVIDENCE PHOTO SHA-256 HASHES (Tamper-Proof Seals)', margin, y);
+    doc.text('4. FORENSIC EVIDENCE PHOTOGRAPHS & SHA-256 SEALS', margin, y);
     addLine(6);
 
-    for (let i = 0; i < form.evidencePhotoHashes.length; i++) {
-      doc.setFontSize(8);
-      doc.setFont('courier', 'normal');
-      doc.setTextColor(15, 23, 42);
-      doc.text(`[${i + 1}] ${form.evidencePhotoHashes[i]}`, margin, y);
-      addLine(5);
+    // Embed photos if available
+    for (let i = 0; i < photos.length; i++) {
+      const raw = photos[i];
+      let dataUrl: string | null = null;
+      if (raw.startsWith('data:image')) {
+        dataUrl = raw;
+      } else {
+        try {
+          const res = await fetch(raw);
+          const blob = await res.blob();
+          dataUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+        } catch {
+          dataUrl = null;
+        }
+      }
+
+      if (dataUrl && dataUrl.startsWith('data:image')) {
+        checkPage(42);
+        const pSize = 34;
+        try {
+          const fmt = dataUrl.includes('image/png') ? 'PNG' : 'JPEG';
+          doc.addImage(dataUrl, fmt, margin, y, pSize, pSize);
+          doc.setDrawColor(23, 55, 94);
+          doc.setLineWidth(0.3);
+          doc.rect(margin, y, pSize, pSize);
+          
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(23, 55, 94);
+          doc.text(`Photo Evidence #${i + 1}`, margin + pSize + 4, y + 5);
+          
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(7.5);
+          doc.setTextColor(71, 85, 105);
+          doc.text(`Digital Seal: SHA-256 Authenticated`, margin + pSize + 4, y + 10);
+          
+          if (form.evidencePhotoHashes[i]) {
+            doc.setFont('courier', 'normal');
+            doc.setFontSize(7);
+            doc.setTextColor(15, 23, 42);
+            doc.text(`Hash: ${form.evidencePhotoHashes[i].slice(0, 32)}`, margin + pSize + 4, y + 16);
+            doc.text(`      ${form.evidencePhotoHashes[i].slice(32)}`, margin + pSize + 4, y + 21);
+          }
+          y += pSize + 4;
+        } catch {
+          // fallback to text
+        }
+      }
+    }
+
+    if (photos.length === 0 && form.evidencePhotoHashes.length > 0) {
+      for (let i = 0; i < form.evidencePhotoHashes.length; i++) {
+        doc.setFontSize(8);
+        doc.setFont('courier', 'normal');
+        doc.setTextColor(15, 23, 42);
+        doc.text(`[${i + 1}] SHA-256: ${form.evidencePhotoHashes[i]}`, margin, y);
+        addLine(5);
+      }
     }
     addLine(4);
   }

@@ -347,6 +347,39 @@ function BlurBlockedPanel({ laplacian, onRetake }: { laplacian: number; onRetake
   );
 }
 
+// ── Helper to compress image before sending to Gemini API for sub-second analysis ──
+async function compressImageForAI(dataUrl: string, maxDim = 640, quality = 0.75): Promise<string> {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined') return resolve(dataUrl);
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width;
+      let h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) {
+          h = Math.round((h * maxDim) / w);
+          w = maxDim;
+        } else {
+          w = Math.round((w * maxDim) / h);
+          h = maxDim;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      } else {
+        resolve(dataUrl);
+      }
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 // ── Main Scanner Page ─────────────────────────────────────────────────────────
 export default function ScannerPage() {
   const { user } = useAuth();
@@ -434,17 +467,21 @@ export default function ScannerPage() {
         return;
       }
 
-      // 6. Cloud AI — Gemini
+      // 6. Cloud AI — Gemini (compressed to ~50KB for fast analysis)
       let aiResult: AIAnalysisResult | null = null;
       try {
+        const compressedBase64 = await compressImageForAI(dataUrl);
         const aiResponse = await fetch('/api/drug-review', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageBase64: dataUrl, reagentType: selectedReagent }),
+          body: JSON.stringify({ imageBase64: compressedBase64, reagentType: selectedReagent }),
         });
         if (aiResponse.ok) {
           const aiJson = await aiResponse.json();
           if (aiJson.success) aiResult = aiJson.analysis;
+        } else {
+          const errData = await aiResponse.json().catch(() => null);
+          console.warn('[Scanner] Gemini AI review returned error status:', aiResponse.status, errData);
         }
       } catch (cloudErr) {
         console.warn('Cloud AI unavailable, continuing with OpenCV only:', cloudErr);
@@ -498,25 +535,41 @@ export default function ScannerPage() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
+      const rawDataUrl = event.target?.result as string;
       const img = new Image();
       img.onload = () => {
+        // Optimize dimensions (max 1200px) to stay well under Vercel 4.5MB body limit
+        const maxDim = 1200;
+        let w = img.width;
+        let h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+
         const canvas = document.createElement('canvas');
-        canvas.width = img.width; canvas.height = img.height;
+        canvas.width = w; canvas.height = h;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
-        ctx.drawImage(img, 0, 0);
-        const fullImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const rx = Math.floor(canvas.width * 0.3), ry = Math.floor(canvas.height * 0.3);
-        const rw = Math.floor(canvas.width * 0.4), rh = Math.floor(canvas.height * 0.4);
+        ctx.drawImage(img, 0, 0, w, h);
+        const fullImageData = ctx.getImageData(0, 0, w, h);
+        const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+
+        const rx = Math.floor(w * 0.3), ry = Math.floor(h * 0.3);
+        const rw = Math.floor(w * 0.4), rh = Math.floor(h * 0.4);
         const rCanvas = document.createElement('canvas');
         rCanvas.width = rw; rCanvas.height = rh;
         const rCtx = rCanvas.getContext('2d');
         if (!rCtx) return;
         rCtx.drawImage(canvas, rx, ry, rw, rh, 0, 0, rw, rh);
-        processCapturedImageData(dataUrl, rCtx.getImageData(0, 0, rw, rh), fullImageData);
+        processCapturedImageData(optimizedDataUrl, rCtx.getImageData(0, 0, rw, rh), fullImageData);
       };
-      img.src = dataUrl;
+      img.src = rawDataUrl;
     };
     reader.readAsDataURL(file);
   };
@@ -572,7 +625,7 @@ export default function ScannerPage() {
           gps_longitude: currentResult.gps.longitude,
           gps_accuracy: currentResult.gps.accuracy,
           photo_hash: currentResult.photoHash,
-          photo_url: photoUrl,
+          photo_url: photoUrl || currentResult.photoDataUrl || null,
         })
         .select('id')
         .single();
@@ -603,7 +656,7 @@ export default function ScannerPage() {
         gemini_lot_number:     ai?.pouchLotNumber ?? null,
         gemini_expiry:         ai?.pouchExpiry ?? null,
         tamper_detected:       ai?.tamperDetected ?? false,
-        photo_url: photoUrl,
+        photo_url: photoUrl || currentResult.photoDataUrl || null,
       });
 
       // Backup in IndexedDB
