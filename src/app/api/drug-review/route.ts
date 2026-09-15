@@ -3,10 +3,11 @@ import type { AIAnalysisResult } from '@/types/drug';
 
 // ── Gemini models to try in order (free-tier compatible) ──────────────────────
 const MODELS_TO_TRY = [
-  'gemini-1.5-flash',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash-latest',
-  'gemini-1.5-pro',
+  'gemini-3.6-flash',
+  'gemini-3.5-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-3.1-flash-lite',
+  'gemini-flash-lite-latest',
 ];
 
 // ── Per-reagent forensic context for the prompt ───────────────────────────────
@@ -26,7 +27,7 @@ export function buildGeminiPrompt(reagentType: string): string {
   const criteria = REAGENT_CRITERIA[reagentType.toLowerCase()] || REAGENT_CRITERIA.marquis;
 
   return `
-You are a forensic image validator for DRUG-SEAL AI — a field narcotics identification system used by India's Narcotics Control Bureau.
+You are a forensic image validator for SAKSHYA AI (साक्ष्य AI) — a field narcotics identification and evidence sealing system used by India's Narcotics Control Bureau, Ministry of Home Affairs.
 
 REAGENT BEING TESTED: ${reagentType.toUpperCase()}
 TARGET SUBSTANCE: ${criteria.targetDrug}
@@ -88,7 +89,9 @@ export async function POST(req: NextRequest) {
     }
 
     const promptText = buildGeminiPrompt(reagentType || 'marquis');
-    const base64Data = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+    const mimeMatch = imageBase64.match(/^data:(image\/[a-zA-Z0-9.+_-]+);base64,/);
+    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const base64Data = imageBase64.replace(/^data:image\/[a-zA-Z0-9.+_-]+;base64,/, '');
 
     // Try each model in order until one succeeds
     let lastError = '';
@@ -106,7 +109,7 @@ export async function POST(req: NextRequest) {
                     { text: promptText },
                     {
                       inline_data: {
-                        mime_type: 'image/jpeg',
+                        mime_type: mimeType,
                         data: base64Data,
                       },
                     },
@@ -116,7 +119,7 @@ export async function POST(req: NextRequest) {
               generationConfig: {
                 responseMimeType: 'application/json',
                 temperature: 0.1,   // Low temperature for deterministic forensic output
-                maxOutputTokens: 400,
+                maxOutputTokens: 2048,
               },
             }),
           }

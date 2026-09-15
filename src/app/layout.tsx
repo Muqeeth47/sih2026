@@ -5,10 +5,10 @@ import { AuthProvider } from '@/hooks/useAuth';
 import RootShell from './RootShell';
 
 export const metadata: Metadata = {
-  title: 'DRUG-SEAL AI | Narcotics Control Bureau | Government of India',
-  description: 'Digital companion for field drug testing — NCB, Ministry of Home Affairs, Government of India. NDPS Act compliance, CIELAB colorimetry, court-admissible evidence chain.',
-  keywords: 'NCB, drug testing, NDPS, colorimetry, seizure, panchnama, forensic, field officer',
-  authors: [{ name: 'NCB DRUG-SEAL AI Team' }],
+  title: 'SAKSHYA AI (साक्ष्य) | Narcotics Control Bureau | Government of India',
+  description: 'Digital companion for field drug testing — NCB, Ministry of Home Affairs, Government of India. NDPS Act compliance, CIELAB colorimetry, court-admissible evidence chain under Bharatiya Sakshya Adhiniyam.',
+  keywords: 'SAKSHYA, NCB, drug testing, NDPS, colorimetry, seizure, panchnama, forensic, field officer, MHA',
+  authors: [{ name: 'Team Sudophiles (SIH26231)' }],
   robots: 'noindex, nofollow', // Internal govt system
 };
 

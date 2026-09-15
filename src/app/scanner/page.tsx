@@ -11,11 +11,12 @@ import { analyzeGlare, type GlareResult } from '@/utils/glareFilter';
 import { sha256Hash } from '@/utils/cryptoSeal';
 import { saveScanResult } from '@/utils/offlineQueue';
 import { supabase } from '@/utils/supabaseClient';
+import { generateAssayPDF } from '@/utils/assayPdf';
 import type { ReagentType, ScanResult, ColorReading, AIAnalysisResult, ConfidenceLevel } from '@/types/drug';
 import {
   FlaskConical, AlertCircle, Upload, CheckCircle2, RotateCcw,
   Zap, Globe, Camera, MapPin, Hash, Clock, ShieldCheck,
-  AlertTriangle, XCircle, ChevronRight,
+  AlertTriangle, XCircle, ChevronRight, FileText,
 } from 'lucide-react';
 import RoleGuard from '@/components/shared/RoleGuard';
 
@@ -104,7 +105,7 @@ function ScanResultPanel({
         </div>
       </div>
 
-      {/* ── ENGINE A — OpenCV ── */}
+      {/* ── STEP 1: Rapid Color Match ── */}
       <div style={{
         background: '#fff', border: '1px solid #bfdbfe',
         borderLeft: '5px solid #0f5ca8',
@@ -116,17 +117,17 @@ function ScanResultPanel({
             <Zap size={15} color="#0f5ca8" />
           </div>
           <div>
-            <div style={{ fontSize: '0.63rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#0f5ca8' }}>ENGINE A — OFFLINE</div>
-            <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>OpenCV Colorimetry (CIELAB ΔE₂₀₀₀)</div>
+            <div style={{ fontSize: '0.63rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#0f5ca8' }}>STEP 1: RAPID COLOR MATCH (OFFLINE)</div>
+            <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>Instant Chemical Color Match (On-Device)</div>
           </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.6rem', marginBottom: '0.75rem' }}>
           {[
-            { label: 'ΔE₂₀₀₀', value: result.deltaE.toFixed(2) },
-            { label: 'L*', value: result.capturedColor.L.toFixed(1) },
-            { label: 'a*', value: result.capturedColor.a.toFixed(1) },
-            { label: 'b*', value: result.capturedColor.bStar.toFixed(1) },
+            { label: 'Color Distance (ΔE)', value: result.deltaE.toFixed(2) },
+            { label: 'Lightness (L*)', value: result.capturedColor.L.toFixed(1) },
+            { label: 'Red-Green (a*)', value: result.capturedColor.a.toFixed(1) },
+            { label: 'Blue-Yellow (b*)', value: result.capturedColor.bStar.toFixed(1) },
           ].map(({ label, value }) => (
             <div key={label} style={{ background: '#f8fafc', borderRadius: '6px', padding: '0.5rem 0.75rem' }}>
               <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>{label}</div>
@@ -155,7 +156,7 @@ function ScanResultPanel({
         </div>
       </div>
 
-      {/* ── ENGINE B — Gemini ── */}
+      {/* ── STEP 2: AI Visual Verification ── */}
       <div style={{
         background: '#fff',
         border: ai ? '1px solid #e9d5ff' : '1px solid #fed7aa',
@@ -168,16 +169,16 @@ function ScanResultPanel({
             <Globe size={15} color={ai ? '#7c3aed' : '#f97316'} />
           </div>
           <div>
-            <div style={{ fontSize: '0.63rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: ai ? '#7c3aed' : '#f97316' }}>ENGINE B — CLOUD AI</div>
+            <div style={{ fontSize: '0.63rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: ai ? '#7c3aed' : '#f97316' }}>STEP 2: AI VISUAL VERIFICATION (ONLINE)</div>
             <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>
-              {ai ? 'Gemini 1.5 Flash — Forensic Vision' : 'Gemini Unavailable'}
+              {ai ? 'AI Visual & Label Inspection' : 'AI Service Unavailable'}
             </div>
           </div>
         </div>
 
         {!ai && (
           <div style={{ fontSize: '0.8rem', color: '#92400e', background: '#fef9ec', border: '1px solid #fde68a', borderRadius: '8px', padding: '0.75rem' }}>
-            Cloud AI analysis was not available for this scan. The OpenCV result above is the primary evidence. Ensure network connectivity and retry.
+            Online AI analysis was not available for this scan. The on-device chemical color match above remains valid field evidence.
           </div>
         )}
 
@@ -255,47 +256,59 @@ function ScanResultPanel({
       </div>
 
       {/* ── Actions ── */}
-      {committed ? (
-        <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '10px', padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <CheckCircle2 size={18} color="#16a34a" />
-          <div>
-            <div style={{ fontWeight: 800, color: '#15803d', fontSize: '0.85rem' }}>Evidence sealed and committed to vault</div>
-            <div style={{ fontSize: '0.72rem', color: '#22c55e' }}>Photo uploaded to Supabase Storage • GPS & hash recorded</div>
+      <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+        <button
+          onClick={() => generateAssayPDF(result)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.4rem',
+            padding: '0.6rem 1.1rem', borderRadius: '8px',
+            border: '1px solid #cbd5e1', background: '#ffffff',
+            fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer',
+            fontFamily: "'Noto Sans', sans-serif", color: '#0f5ca8',
+          }}
+        >
+          <FileText size={15} color="#0f5ca8" /> Download Certified PDF
+        </button>
+
+        {committed ? (
+          <div style={{ flex: 1, background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px', padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <CheckCircle2 size={16} color="#16a34a" />
+            <span style={{ fontWeight: 800, color: '#15803d', fontSize: '0.82rem' }}>Evidence sealed and recorded into vault</span>
           </div>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <button
-            onClick={onReset}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-              padding: '0.6rem 1.1rem', borderRadius: '8px',
-              border: '1px solid #e2e8f0', background: '#f8fafc',
-              fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer',
-              fontFamily: "'Noto Sans', sans-serif", color: '#475569',
-            }}
-          >
-            <RotateCcw size={14} /> Retake
-          </button>
-          <button
-            onClick={onCommit}
-            disabled={committing}
-            style={{
-              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
-              padding: '0.6rem 1.25rem', borderRadius: '8px',
-              border: 'none',
-              background: committing ? '#94a3b8' : '#0f5ca8',
-              color: '#fff', fontSize: '0.83rem', fontWeight: 700,
-              cursor: committing ? 'not-allowed' : 'pointer',
-              fontFamily: "'Noto Sans', sans-serif",
-            }}
-          >
-            <ShieldCheck size={14} />
-            {committing ? 'Uploading to vault…' : 'Commit to Evidence Vault'}
-            {!committing && <ChevronRight size={14} />}
-          </button>
-        </div>
-      )}
+        ) : (
+          <>
+            <button
+              onClick={onReset}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.4rem',
+                padding: '0.6rem 1rem', borderRadius: '8px',
+                border: '1px solid #e2e8f0', background: '#f8fafc',
+                fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer',
+                fontFamily: "'Noto Sans', sans-serif", color: '#475569',
+              }}
+            >
+              <RotateCcw size={14} /> Retake
+            </button>
+            <button
+              onClick={onCommit}
+              disabled={committing}
+              style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
+                padding: '0.6rem 1.25rem', borderRadius: '8px',
+                border: 'none',
+                background: committing ? '#94a3b8' : '#0f5ca8',
+                color: '#fff', fontSize: '0.83rem', fontWeight: 700,
+                cursor: committing ? 'not-allowed' : 'pointer',
+                fontFamily: "'Noto Sans', sans-serif",
+              }}
+            >
+              <ShieldCheck size={14} />
+              {committing ? 'Uploading to vault…' : 'Commit to Evidence Vault'}
+              {!committing && <ChevronRight size={14} />}
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -627,9 +640,9 @@ export default function ScannerPage() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncb-navy-dark)', margin: 0 }}>Forensic Field Scanner</h1>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncb-navy-dark)', margin: 0 }}>Field Chemical Scanner</h1>
             <p style={{ fontSize: '0.8rem', color: 'var(--ncb-text-muted)', margin: '0.2rem 0 0' }}>
-              CIELAB ΔE₂₀₀₀ Colorimetry + Gemini 1.5 Flash Cloud Verification
+              Two-Step Verification: Instant Color Match (On-Device) + Smart AI Inspection (Cloud)
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>

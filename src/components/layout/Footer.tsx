@@ -23,19 +23,29 @@ export default function Footer() {
           paddingBottom: '1.5rem',
         }}>
           {/* Brand */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <div style={{
-              width: 34, height: 34, borderRadius: '8px',
-              background: '#0f5ca8',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 2px 6px rgba(15, 92, 168, 0.25)',
-            }}>
-              <Shield size={18} color="white" strokeWidth={2} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <img
+                src="/images/mha-logo.png"
+                alt="Ministry of Home Affairs"
+                style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
+              />
+              <div style={{ width: '1px', height: '26px', background: '#cbd5e1' }} />
+              <img
+                src="/images/ncb-logo.png"
+                alt="Narcotics Control Bureau"
+                style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
+              />
             </div>
             <div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a' }}>DRUG-SEAL AI</div>
-              <div style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
-                Narcotics Control Bureau • Ministry of Home Affairs
+              <div style={{ fontSize: '0.92rem', fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <span>SAKSHYA AI</span>
+                <span style={{ fontSize: '0.72rem', color: '#0f5ca8', background: '#e0f2fe', padding: '1px 5px', borderRadius: '4px', fontWeight: 800 }}>
+                  साक्ष्य
+                </span>
+              </div>
+              <div style={{ fontSize: '0.66rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
+                Narcotics Control Bureau · Ministry of Home Affairs
               </div>
             </div>
           </div>
@@ -94,7 +104,7 @@ export default function Footer() {
             Content owned by <strong style={{ color: '#0f172a' }}>Narcotics Control Bureau, MHA, GoI</strong>
             {' '}| Designed &amp; Developed for <strong style={{ color: '#0f172a' }}>SIH 2026</strong>
           </span>
-          <span>© {year} NCB DRUG-SEAL AI | Last Updated: {new Date().toLocaleDateString('en-IN')}</span>
+          <span>© {year} Narcotics Control Bureau · SAKSHYA AI (साक्ष्य) | Ministry of Home Affairs</span>
         </div>
       </div>
     </footer>

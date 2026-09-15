@@ -9,6 +9,9 @@
 /* ─── CSS Custom Properties (Light Theme) ────────────────────── */
 :root {
   /* Government Primary & Accents (Light-Themed Palette) */
+  --ncb-navy-primary: #0f5ca8;     /* Official NCB Blue Accent */
+  --ncb-navy-dark: #0a192f;        /* Deep Navy Text/Header */
+  --ncb-saffron: #ff9933;          /* National Flag Saffron */
   --ncb-primary: #1e293b;          /* Dark Slate Ink for Branding */
   --ncb-primary-dark: #0f172a;     /* Deep Ink Accent */
   --ncb-blue-accent: #0284c7;      /* Clean Link & Interactive Accent */

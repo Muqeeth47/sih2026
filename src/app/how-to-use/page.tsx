@@ -42,13 +42,13 @@ const MANUALS: Record<NCBRole, RoleManual> = {
       },
       {
         step: '03',
-        title: 'Review Dual-Engine Analysis (OpenCV + Gemini AI)',
-        desc: 'Once captured, inspect the OpenCV CIEDE2000 ΔE tolerance score (Pass ≤ 15.0) and the Gemini 3.6 Flash multimodal review (purity estimate, lot number verification, tamper check).',
+        title: 'Review Two-Step Verification (Color Match + AI Review)',
+        desc: 'Once captured, inspect the instant chemical color match (tolerance score) and the AI visual review (kit type, label verification, and package tamper check).',
       },
       {
         step: '04',
         title: 'Draft Panchnama & Export Certified PDF Assay Report',
-        desc: 'Tap "Download Assay PDF" for immediate physical printout or tap "Draft Panchnama" to auto-populate Form F seizure memorandum with SHA-256 photo hash, GPS interdiction locus, and officer signature.',
+        desc: 'Tap "Download Certified PDF" for an official court-ready document with embedded photo, or tap "Draft Panchnama" to auto-populate Form F seizure memorandum with SHA-256 photo hash, GPS location, and officer signature.',
       },
       {
         step: '05',
@@ -99,7 +99,7 @@ const MANUALS: Record<NCBRole, RoleManual> = {
     keyTools: [
       { name: 'Evidence Vault', route: '/vault', desc: 'Review field seizure packages, verify SHA-256 hashes, and append lab assay numbers.' },
       { name: 'Zonal Dashboard', route: '/analytics', desc: 'Inspect regional purity trends, adulterant patterns, and chemical profiles.' },
-      { name: 'Calibration Engine', route: '/settings', desc: 'Fine-tune CIELAB tolerances and camera illuminant offsets.' },
+      { name: 'Color Calibration', route: '/settings', desc: 'Fine-tune color tolerances and camera lighting offsets.' },
     ],
     complianceNotes: [
       'Chemical test kit spot tests serve as presumptive evidence; final charge-sheet requires Form 13 FSL report.',
@@ -196,7 +196,7 @@ export default function HowToUsePage() {
       <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 shadow-sm">
         <div className="flex items-center gap-2.5 text-blue-700 text-xs font-black uppercase tracking-wider mb-2">
           <HelpCircle size={18} />
-          <span>DRUG-SEAL AI · OPERATIONAL MANUAL & SOP</span>
+          <span>SAKSHYA AI (साक्ष्य) · OPERATIONAL MANUAL & SOP</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2">
           Role-Based Field & Judicial Operations Guide

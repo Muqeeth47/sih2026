@@ -39,7 +39,7 @@ const ROLES = [
     fullName: 'Field Investigating Officer',
     Icon: Camera, color: '#0f5ca8',
     does: 'Takes photo of test pouch → AI analyses colour → generates sealed report',
-    trigger: 'If the two AI engines disagree → officer taps "Send to FSL Lab"',
+    trigger: 'If the two verification checks disagree → officer taps "Send to FSL Lab"',
     arrow: 'Disputed scan → forwarded to Forensic Lab',
   },
   {
@@ -109,12 +109,12 @@ export default function ArchitecturePage() {
 
       {/* ── Hero ── */}
       <div style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
-        <Eyebrow label="DRUG-SEAL AI · SIH26231 · Ministry of Home Affairs" />
+        <Eyebrow label="SAKSHYA AI (साक्ष्य) · SIH26231 · Ministry of Home Affairs" />
         <h1 style={{ fontSize: 'clamp(1.4rem, 4vw, 2.1rem)', fontWeight: 900, color: '#0f172a', margin: '0 0 0.6rem', letterSpacing: '-0.02em' }}>
           How It Works
         </h1>
         <p style={{ fontSize: '0.9rem', color: '#64748b', maxWidth: 560, margin: '0 auto', lineHeight: 1.7 }}>
-          A field officer takes a photo of a drug test pouch. Two AI engines analyse the colour. The result travels up the chain — automatically — until a court makes the final call.
+          A field officer takes a photo of a drug test pouch. Two smart checks analyse the test pouch. The result travels up the chain — automatically — until a court makes the final call.
         </p>
       </div>
 
@@ -137,11 +137,11 @@ export default function ArchitecturePage() {
         </div>
       </section>
 
-      {/* ── Dual Engine ── */}
+      {/* ── Two-Step Check ── */}
       <section style={{ marginBottom: '2.5rem' }}>
-        <Eyebrow label="The Solution — 2 Engines Check Every Photo" color="#7c3aed" />
+        <Eyebrow label="The Solution — Two-Step Verification On Every Photo" color="#7c3aed" />
         <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', margin: '0 0 1rem' }}>
-          Two independent AI systems must agree before a result is trusted
+          Two independent checks must agree before a result is trusted
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem' }}>
           <Card style={{ borderLeft: '4px solid #0f5ca8' }}>
@@ -150,12 +150,12 @@ export default function ArchitecturePage() {
                 <Zap size={17} color="#0f5ca8" />
               </div>
               <div>
-                <div style={{ fontSize: '0.63rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#0f5ca8' }}>ENGINE A — OFFLINE</div>
-                <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>OpenCV Colorimetry</div>
+                <div style={{ fontSize: '0.63rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#0f5ca8' }}>CHECK 1 — OFFLINE COLOR TEST</div>
+                <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>Instant Color Match</div>
               </div>
             </div>
             <div style={{ fontSize: '0.78rem', color: '#64748b', lineHeight: 1.6 }}>
-              Measures exact colour using CIELAB ΔE₂₀₀₀ maths. Runs on the device — no internet needed. Takes 5 milliseconds per frame.
+              Measures exact colour using scientific color maths. Runs directly on the phone — no internet needed. Takes under 5 milliseconds.
             </div>
           </Card>
           <Card style={{ borderLeft: '4px solid #7c3aed' }}>
@@ -164,12 +164,12 @@ export default function ArchitecturePage() {
                 <Globe size={17} color="#7c3aed" />
               </div>
               <div>
-                <div style={{ fontSize: '0.63rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#7c3aed' }}>ENGINE B — CLOUD AI</div>
-                <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>Gemini 3.6 Flash</div>
+                <div style={{ fontSize: '0.63rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#7c3aed' }}>CHECK 2 — CLOUD AI REVIEW</div>
+                <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>Smart AI Inspection</div>
               </div>
             </div>
             <div style={{ fontSize: '0.78rem', color: '#64748b', lineHeight: 1.6 }}>
-              Google's multimodal AI reads the pouch label, checks for tampering, and writes a court-ready forensic paragraph.
+              Smart AI reads the pouch label, checks for package tampering, and prepares an official court statement for the case record.
             </div>
           </Card>
         </div>
@@ -285,7 +285,7 @@ export default function ArchitecturePage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1px', background: '#e2e8f0', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
         {[
           { num: '4', label: 'Roles' },
-          { num: '2', label: 'AI Engines' },
+          { num: '2-Step', label: 'Verification' },
           { num: '19', label: 'Routes Built' },
           { num: 'Sec. 52', label: 'NDPS Compliant' },
         ].map(s => (

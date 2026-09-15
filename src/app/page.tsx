@@ -180,8 +180,32 @@ export default function LandingPage() {
 
           {/* Left Hero Content */}
           <div className="animate-fade-in">
-            {/* Left-Aligned Typographic Eyebrow with Inline SOP Link */}
-            <div className="flex flex-wrap items-center gap-2 mb-4">
+            {/* Official Government Agencies Header Badge */}
+            <div className="inline-flex items-center gap-2.5 sm:gap-3 bg-white p-2 sm:p-2.5 rounded-xl border border-slate-200 shadow-xs mb-5 flex-wrap sm:flex-nowrap">
+              <img
+                src="/images/mha-logo.png"
+                alt="Ministry of Home Affairs"
+                className="h-7 sm:h-9 w-auto object-contain"
+              />
+              <div className="w-px h-6 bg-slate-200 hidden sm:block" />
+              <img
+                src="/images/ncb-logo.png"
+                alt="Narcotics Control Bureau"
+                className="h-7 sm:h-9 w-auto object-contain"
+              />
+              <div className="w-px h-6 bg-slate-200 hidden sm:block" />
+              <div className="text-left">
+                <span className="text-[10.5px] sm:text-xs font-black uppercase text-blue-700 tracking-wider block">
+                  SAKSHYA AI · साक्ष्य
+                </span>
+                <span className="text-[9.5px] text-slate-500 font-bold block">
+                  सत्यमेव साक्ष्यम् · MHA GoI
+                </span>
+              </div>
+            </div>
+
+            {/* Eyebrow */}
+            <div className="flex flex-wrap items-center gap-2 mb-3">
               <span className="text-xs font-black uppercase text-blue-700 tracking-wider">
                 Forensic Field Intelligence · SIH26231
               </span>
@@ -210,7 +234,7 @@ export default function LandingPage() {
             </h1>
 
             <p style={{ fontSize: '1.05rem', lineHeight: 1.7, color: '#475569', marginBottom: '2.25rem', maxWidth: 540 }}>
-              DRUG-SEAL AI transforms standard smartphone optics into a certified, 100% offline spectrophotometer. CIELAB ΔE₂₀₀₀ colorimetry, SHA-256 tamper-proof photo sealing, and 1-click Section 52 NDPS Panchnama PDF — purpose-built for NCB & ANTF officers during highway interdictions.
+              <strong>SAKSHYA AI (साक्ष्य AI)</strong> transforms standard smartphone optics into a certified, 100% offline spectrophotometer. CIELAB ΔE₂₀₀₀ colorimetry, SHA-256 tamper-proof photo sealing, and 1-click Section 52 NDPS Panchnama PDF — purpose-built for NCB &amp; ANTF officers during highway interdictions.
             </p>
 
             {/* CTAs */}
@@ -376,7 +400,7 @@ export default function LandingPage() {
               <FlaskConical size={14} /> Interactive Chemical Simulator
             </div>
             <h2 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.5rem)', fontWeight: 900, color: '#0f172a', margin: '0 0 0.75rem', letterSpacing: '-0.03em' }}>
-              Experience the 5ms Edge Colorimetry Engine
+              Experience Instant On-Device Color Match (&lt;5ms)
             </h2>
             <p style={{ fontSize: '0.95rem', color: '#64748b', maxWidth: 580, margin: '0 auto', lineHeight: 1.65 }}>
               Select a field reagent to observe instantaneous spectrophotometric matching against official UNODC reference standards.
@@ -706,7 +730,7 @@ export default function LandingPage() {
             Ready for live evaluation?
           </h2>
           <p style={{ color: '#64748b', marginBottom: '2rem', lineHeight: 1.7, fontSize: '0.94rem' }}>
-            Access the DRUG-SEAL AI portal with 1-click evaluation credentials across any of the 4 operational roles.
+            Access the SAKSHYA AI (साक्ष्य) portal with 1-click evaluation credentials across any of the 4 operational roles.
           </p>
           <Link
             href="/login"

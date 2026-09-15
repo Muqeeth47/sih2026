@@ -57,41 +57,46 @@ export default function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
 
       {/* Logo & Identity */}
       <Link
-        href={isAuthenticated ? '/scanner' : '/'}
-        style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', textDecoration: 'none', flexShrink: 0 }}
+        href={isAuthenticated ? '/overview' : '/'}
+        style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', textDecoration: 'none', flexShrink: 0 }}
       >
-        <div
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: '8px',
-            background: '#0f5ca8',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 6px rgba(15, 92, 168, 0.25)',
-            flexShrink: 0,
-          }}
-          aria-label="DRUG-SEAL AI Emblem"
-        >
-          <Shield size={18} color="white" strokeWidth={2} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <img
+            src="/images/mha-logo.png"
+            alt="Ministry of Home Affairs, Government of India"
+            style={{ height: '32px', width: 'auto', objectFit: 'contain' }}
+            className="h-7 sm:h-9"
+          />
+          <div style={{ width: '1px', height: '22px', background: '#cbd5e1' }} className="hidden sm:block" />
+          <img
+            src="/images/ncb-logo.png"
+            alt="Narcotics Control Bureau Emblem"
+            style={{ height: '32px', width: 'auto', objectFit: 'contain' }}
+            className="h-7 sm:h-9"
+          />
         </div>
         <div>
           <div
             style={{
-              fontSize: '0.88rem',
-              fontWeight: 800,
+              fontSize: '0.92rem',
+              fontWeight: 900,
               color: '#0f172a',
-              lineHeight: 1.2,
-              letterSpacing: '-0.01em',
+              lineHeight: 1.15,
+              letterSpacing: '-0.02em',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
             }}
           >
-            DRUG-SEAL AI
+            <span>SAKSHYA AI</span>
+            <span style={{ fontSize: '0.72rem', color: '#0f5ca8', fontWeight: 800, background: '#e0f2fe', padding: '1px 5px', borderRadius: '4px' }}>
+              साक्ष्य
+            </span>
           </div>
           <div
-            className="hidden sm:block text-[10px] text-slate-500 font-semibold tracking-wider uppercase"
+            className="hidden sm:block text-[9.5px] text-slate-500 font-bold tracking-wider uppercase"
           >
-            Field Forensic Companion · NCB MHA
+            Narcotics Control Bureau · MHA
           </div>
         </div>
       </Link>

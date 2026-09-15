@@ -125,38 +125,55 @@ export default function LoginPage() {
           className="bg-[#0a3b69] p-6 sm:p-8 md:p-12 flex flex-col justify-between text-white relative"
         >
           <div>
-            {/* Left-Aligned Typographic Eyebrow */}
-            <div className="flex items-center gap-2 mb-6">
-              <span className="text-[0.72rem] font-extrabold uppercase text-blue-200 tracking-wider">
-                ROLE-BASED CLEARANCE BOUNDARY
-              </span>
+            {/* Government Agency Logos Container */}
+            <div className="inline-flex items-center gap-3 bg-white/95 backdrop-blur-xs p-2 sm:p-2.5 rounded-xl border border-white/20 shadow-md mb-6">
+              <img
+                src="/images/mha-logo.png"
+                alt="Ministry of Home Affairs"
+                className="h-8 sm:h-9 w-auto object-contain"
+              />
+              <div className="w-px h-6 bg-slate-300" />
+              <img
+                src="/images/ncb-logo.png"
+                alt="Narcotics Control Bureau"
+                className="h-8 sm:h-9 w-auto object-contain"
+              />
             </div>
 
             {/* Main Headline */}
-            <h1
-              style={{
-                fontSize: 'clamp(1.8rem, 3.8vw, 3rem)',
-                fontWeight: 900,
-                lineHeight: 1.1,
-                letterSpacing: '-0.04em',
-                margin: '0 0 1rem',
-                color: '#ffffff',
-              }}
-            >
-              Keep evidence<br />sealed.
-            </h1>
+            <div className="mb-2">
+              <span className="text-[0.7rem] font-extrabold uppercase text-blue-200 tracking-wider block mb-1">
+                MINISTRY OF HOME AFFAIRS · NCB
+              </span>
+              <h1
+                style={{
+                  fontSize: 'clamp(1.8rem, 3.8vw, 2.8rem)',
+                  fontWeight: 900,
+                  lineHeight: 1.1,
+                  letterSpacing: '-0.03em',
+                  margin: '0 0 0.5rem',
+                  color: '#ffffff',
+                }}
+              >
+                SAKSHYA AI<br />
+                <span className="text-blue-200 text-[1.4rem] font-bold">साक्ष्य AI</span>
+              </h1>
+              <div className="text-[0.82rem] font-semibold text-emerald-300 tracking-wide mb-3">
+                सत्यमेव साक्ष्यम् · Digital Evidence Sealing
+              </div>
+            </div>
 
             {/* Subtitle */}
             <p
               style={{
-                fontSize: '0.88rem',
+                fontSize: '0.85rem',
                 lineHeight: 1.6,
-                color: 'rgba(255, 255, 255, 0.75)',
+                color: 'rgba(255, 255, 255, 0.8)',
                 margin: 0,
                 maxWidth: '340px',
               }}
             >
-              Use DRUG-SEAL AI to eliminate color subjectivity, lock satellite GPS, and certify court-admissible forensic records.
+              Transform standard smartphone cameras into calibrated spectrophotometers. Two-step verification and Section 52 NDPS Panchnama certification.
             </p>
           </div>
 

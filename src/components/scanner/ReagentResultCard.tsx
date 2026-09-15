@@ -8,8 +8,7 @@ import {
 import type { ScanResult } from '@/types/drug';
 import { SUBSTANCE_DISPLAY_NAMES } from '@/utils/reagentMatrix';
 import Link from 'next/link';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { generateAssayPDF } from '@/utils/assayPdf';
 
 interface ReagentResultCardProps {
   result: ScanResult;
@@ -24,149 +23,10 @@ export default function ReagentResultCard({ result, onReset, onSaveToVault }: Re
   const isPositive = result.testStatus === 'positive';
   const substanceTitle = SUBSTANCE_DISPLAY_NAMES[result.matchedSubstance] || 'Unidentified Compound';
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     setDownloading(true);
     try {
-      const doc = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const pageW = doc.internal.pageSize.getWidth();
-      let y = 16;
-
-      // Header Banner
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(14);
-      doc.setTextColor(15, 92, 168);
-      doc.text('NARCOTICS CONTROL BUREAU', pageW / 2, y, { align: 'center' });
-      y += 6;
-
-      doc.setFontSize(10);
-      doc.setTextColor(71, 85, 105);
-      doc.text('MINISTRY OF HOME AFFAIRS · GOVERNMENT OF INDIA', pageW / 2, y, { align: 'center' });
-      y += 5;
-
-      doc.setFontSize(11);
-      doc.setTextColor(15, 23, 42);
-      doc.text('DUAL FORENSIC ASSAY REPORT: OPENCV & GEMINI AI', pageW / 2, y, { align: 'center' });
-      y += 7;
-
-      doc.setDrawColor(203, 213, 225);
-      doc.line(14, y, pageW - 14, y);
-      y += 6;
-
-      // Core Details Table
-      autoTable(doc, {
-        startY: y,
-        theme: 'grid',
-        headStyles: { fillColor: [15, 92, 168], textColor: [255, 255, 255], fontStyle: 'bold' },
-        body: [
-          ['Case Registration No.', result.caseId || 'NCB-SEAL-PENDING', 'Testing Protocol', result.reagentType.toUpperCase() + ' Reagent Kit'],
-          ['Presumptive Contraband', substanceTitle, 'Status Finding', isPositive ? 'PRESUMPTIVE POSITIVE' : 'NEGATIVE / INCONCLUSIVE'],
-          ['CIELAB Delta-E (ΔE₂₀₀₀)', `${result.deltaE} (Threshold ≤ ${result.matchedReagentRef?.deltaEThreshold || 15})`, 'Edge Confidence', result.confidence.toUpperCase()],
-          ['Investigating Officer', result.officerBadge, 'Test Timestamp', new Date(result.timestamp).toLocaleString('en-IN')],
-          ['GPS Coordinates', `${result.gps.latitude.toFixed(4)}°N, ${result.gps.longitude.toFixed(4)}°E (±${result.gps.accuracy}m)`, 'UNODC Standard Ref', result.matchedReagentRef?.unodc_reference || 'UNODC ST/NAR/13'],
-        ],
-        styles: { fontSize: 8.5, cellPadding: 2.5 },
-      });
-
-      y = (doc as any).lastAutoTable.finalY + 8;
-
-      // SECTION 1: OPENCV EDGE SPECTROPHOTOMETRY
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.setTextColor(15, 92, 168);
-      doc.text('PART 1: OPENCV EDGE SPECTROPHOTOMETRY (CLIENT-SIDE MATH)', 14, y);
-      y += 4;
-
-      autoTable(doc, {
-        startY: y,
-        theme: 'plain',
-        body: [
-          ['Captured Specimen CIELAB', `L* = ${result.capturedColor.L.toFixed(1)}, a* = ${result.capturedColor.a.toFixed(1)}, b* = ${result.capturedColor.bStar.toFixed(1)}`],
-          ['Standard Target CIELAB', `L* = ${result.matchedReagentRef?.labL.toFixed(1) || 0}, a* = ${result.matchedReagentRef?.labA.toFixed(1) || 0}, b* = ${result.matchedReagentRef?.labB.toFixed(1) || 0}`],
-          ['Calculated CIEDE2000 ΔE', `${result.deltaE.toFixed(2)} (Tolerance limit: ≤ ${result.matchedReagentRef?.deltaEThreshold || 15})`],
-          ['Laplacian Image Sharpness', `Variance: ${Math.round(result.blurAnalysis?.laplacianVariance || 0)} (Pass Threshold ≥ 90)`],
-          ['Specular Glare Level', `${result.glareAnalysis?.glarePercentage.toFixed(1)}% (Threshold ≤ 8%)`],
-        ],
-        styles: { fontSize: 8.5, cellPadding: 2 },
-      });
-
-      y = (doc as any).lastAutoTable.finalY + 8;
-
-      // SECTION 2: GEMINI 3.6 FLASH FORENSIC MULTIMODAL REVIEW
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.setTextColor(21, 128, 61);
-      doc.text('PART 2: GEMINI 3.6 FLASH FORENSIC MULTIMODAL AUDIT (CLOUD AI)', 14, y);
-      y += 4;
-
-      if (result.aiAnalysis) {
-        autoTable(doc, {
-          startY: y,
-          theme: 'plain',
-          body: [
-            ['Visual AI Identified Substance', result.aiAnalysis.substance],
-            ['AI Forensic Confidence', `${Math.round(result.aiAnalysis.confidence * 100)}%`],
-            ['Estimated Chemical Purity', result.aiAnalysis.purity || 'Standard Field Purity'],
-            ['Adulterants / Cutting Agents', result.aiAnalysis.adulterants?.join(', ') || 'None detected in visual phase'],
-            ['Pouch Lot & Expiry OCR', `Lot: ${result.aiAnalysis.pouchLotNumber || 'Verified'} | Expiry: ${result.aiAnalysis.pouchExpiry || 'N/A'}`],
-            ['Pouch Tamper Status', result.aiAnalysis.tamperDetected ? 'TAMPER ALERT DETECTED' : 'PASS - Seal Intact'],
-            ['Reason Code', result.aiAnalysis.reason || 'Conforms to UNODC criteria'],
-          ],
-          styles: { fontSize: 8.5, cellPadding: 2 },
-        });
-
-        y = (doc as any).lastAutoTable.finalY + 5;
-
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9);
-        doc.setTextColor(15, 23, 42);
-        doc.text('Statutory Panchnama Statement (NDPS Act Section 52):', 14, y);
-        y += 4;
-
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8.2);
-        const splitSummary = doc.splitTextToSize(result.aiAnalysis.courtSummary, pageW - 28);
-        doc.text(splitSummary, 14, y);
-        y += splitSummary.length * 4.2 + 6;
-      } else {
-        doc.setFont('helvetica', 'italic');
-        doc.setFontSize(8.5);
-        doc.setTextColor(100, 116, 139);
-        doc.text('Operated in offline local mode (CIELAB colorimetric certification intact).', 14, y);
-        y += 8;
-      }
-
-      // Cryptographic Integrity Seal
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.setTextColor(15, 92, 168);
-      doc.text('CRYPTOGRAPHIC EVIDENCE INTEGRITY SEAL', 14, y);
-      y += 5;
-
-      doc.setFont('courier', 'normal');
-      doc.setFontSize(7.5);
-      doc.setTextColor(15, 23, 42);
-      doc.text(`SHA-256 PHOTO HASH: ${result.photoHash}`, 14, y);
-      y += 5;
-
-      doc.setFont('helvetica', 'italic');
-      doc.setFontSize(7.8);
-      doc.setTextColor(100, 116, 139);
-      doc.text('Admissible under Section 65B Bharatiya Sakshya Adhiniyam / Indian Evidence Act.', 14, y);
-      y += 10;
-
-      // Signatures
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8.5);
-      doc.setTextColor(15, 23, 42);
-      doc.text('Signature of Investigating Officer', 14, y);
-      doc.text('Forensic Lab Analyst / Panch Witness', pageW - 75, y);
-
-      doc.save(`DRUG_SEAL_ASSAY_${result.caseId || 'REPORT'}.pdf`);
+      await generateAssayPDF(result);
     } catch (err) {
       console.error('PDF generation error:', err);
       alert('Could not export PDF report. Please try again.');
@@ -455,10 +315,10 @@ export default function ReagentResultCard({ result, onReset, onSaveToVault }: Re
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-900 uppercase tracking-wide">
                 <Layers size={16} />
-                <span>Dual Engine Forensic Corroboration</span>
+                <span>Two-Step Forensic Verification</span>
               </div>
               <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 text-[0.7rem] font-extrabold">
-                100% Corroborated Match
+                Corroborated Match
               </span>
             </div>
 
@@ -467,8 +327,8 @@ export default function ReagentResultCard({ result, onReset, onSaveToVault }: Re
                 <thead className="bg-slate-100 text-slate-700 font-extrabold text-[0.7rem] uppercase border-b border-slate-200">
                   <tr>
                     <th className="p-2.5">Evaluation Metric</th>
-                    <th className="p-2.5 text-blue-700">OpenCV Engine (Edge)</th>
-                    <th className="p-2.5 text-emerald-700">Gemini 3.6 Flash (AI)</th>
+                    <th className="p-2.5 text-blue-700">Step 1: Color Match (On-Device)</th>
+                    <th className="p-2.5 text-emerald-700">Step 2: AI Verification (Online)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

@@ -11,7 +11,7 @@ import Footer from '@/components/layout/Footer';
 import SplashScreen from '@/components/shared/SplashScreen';
 import OfflineSyncBadge from '@/components/shared/OfflineSyncBadge';
 
-const PUBLIC_PATHS = ['/', '/login', '/about', '/terms', '/privacy', '/architecture'];
+const PUBLIC_PATHS = ['/', '/login', '/about', '/terms', '/privacy', '/architecture', '/how-to-use'];
 
 export default function RootShell({ children }: { children: React.ReactNode }) {
   const [splashDone, setSplashDone] = useState(false);
@@ -42,8 +42,11 @@ export default function RootShell({ children }: { children: React.ReactNode }) {
     if (isMobile) setSidebarOpen(false);
   }, [pathname, isMobile]);
 
-  const isPublicPage = PUBLIC_PATHS.includes(pathname) || pathname === '/';
-  const showShell = isAuthenticated && !isPublicPage;
+  // If authenticated, always show app shell (with sidebar) across all routes including /architecture and /how-to-use
+  // Only hide shell on login page or when user is not authenticated
+  const isLoginPage = pathname === '/login';
+  const showShell = isAuthenticated && !isLoginPage;
+  const isPublicPage = !isAuthenticated && (PUBLIC_PATHS.includes(pathname) || pathname === '/');
 
   if (!splashDone) {
     return <SplashScreen onComplete={() => setSplashDone(true)} />;

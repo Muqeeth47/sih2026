@@ -119,7 +119,7 @@ export default function AccessibilityBar() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0, overflow: 'hidden' }}>
         <Shield size={14} color="#0f5ca8" style={{ flexShrink: 0 }} />
         <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.74rem', whiteSpace: 'nowrap' }}>
-          DRUG-SEAL AI · NCB
+          SAKSHYA AI (साक्ष्य) · NCB
         </span>
         <span style={{ color: '#cbd5e1', fontSize: '0.8rem', display: 'var(--bar-sep-display, none)' }}>|</span>
         <span style={{

@@ -31,7 +31,7 @@ const NDPS_SECTIONS = [
     section: 'Section 52',
     title: 'Disposal of persons arrested and articles seized (Form F Panchnama)',
     summary: 'Mandates that every person arrested and article seized shall be forwarded without unnecessary delay to the officer in charge of the nearest police station or authorized officer with a formal seizure memorandum.',
-    penalty: 'Statutory basis for the DRUG-SEAL AI automated Form F Seizure Panchnama.',
+    penalty: 'Statutory basis for the SAKSHYA AI (साक्ष्य) automated Form F Seizure Panchnama.',
   },
   {
     section: 'Section 52A',
@@ -103,11 +103,21 @@ export default function LegalLibraryPage() {
               boxShadow: 'var(--shadow-sm)',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
-              <span style={{ padding: '0.2rem 0.6rem', borderRadius: 'var(--radius-sm)', background: 'var(--ncb-navy-primary)', color: 'white', fontSize: '0.75rem', fontWeight: 800 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+              <span style={{
+                padding: '0.25rem 0.65rem',
+                borderRadius: '6px',
+                background: '#e0f2fe',
+                color: '#0369a1',
+                border: '1px solid #bae6fd',
+                fontSize: '0.78rem',
+                fontWeight: 800,
+                letterSpacing: '0.02em',
+                display: 'inline-block',
+              }}>
                 {item.section}
               </span>
-              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--ncb-navy-dark)', margin: 0 }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
                 {item.title}
               </h3>
             </div>

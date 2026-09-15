@@ -67,7 +67,7 @@ export default function PanchnamaFormPage() {
   ]);
 
   const [narrative, setNarrative] = useState(
-    'Acting on intelligence received, a special checking team intercepted a transport vehicle at the indicated check post. The driver was searched under Section 50 of NDPS Act after explaining legal rights. Recovery of contraband was subjected to on-device field chemical test via DRUG-SEAL AI, yielding positive spot reaction. Two independent witnesses examined the packaging and affixation of NCB forensic paper seal.'
+    'Acting on intelligence received, a special checking team intercepted a transport vehicle at the indicated check post. The driver was searched under Section 50 of NDPS Act after explaining legal rights. Recovery of contraband was subjected to on-device field chemical test via SAKSHYA AI (साक्ष्य), yielding positive spot reaction. Two independent witnesses examined the packaging and affixation of NCB forensic paper seal.'
   );
 
   const [toastMessage, setToastMessage] = useState('');
@@ -196,20 +196,21 @@ export default function PanchnamaFormPage() {
             onClick={handleExportPDF}
             style={{
               padding: '0.6rem 1.25rem',
-              background: 'var(--ncb-navy-primary)',
-              color: 'white',
+              background: '#0f5ca8',
+              color: '#ffffff',
               border: 'none',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: '8px',
               fontWeight: 700,
               fontSize: '0.85rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.4rem',
-              boxShadow: 'var(--shadow-md)',
+              gap: '0.45rem',
+              boxShadow: '0 2px 6px rgba(15, 92, 168, 0.25)',
+              fontFamily: "'Noto Sans', sans-serif",
             }}
           >
-            <Download size={16} />
+            <Download size={16} color="#ffffff" />
             Export Form &apos;F&apos; PDF
           </button>
         </div>

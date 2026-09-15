@@ -18,7 +18,7 @@ export default function PrivacyPage() {
 
         <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--ncb-navy-primary)', marginTop: '1.5rem' }}>2. Offline Evidence Storage</h2>
         <p>
-          Evidence photographs, spectrophotometric data, and panchnama memoranda are stored locally within the browser&apos;s sandboxed IndexedDB storage engine. No raw photographic data is transmitted to commercial third-party cloud analytics services.
+          Evidence photographs, spectrophotometric data, and panchnama memoranda are stored locally within the browser&apos;s sandboxed offline storage. No raw photographic data is transmitted to commercial third-party cloud analytics services.
         </p>
 
         <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--ncb-navy-primary)', marginTop: '1.5rem' }}>3. Cloud Forensic Intelligence</h2>

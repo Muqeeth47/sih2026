@@ -21,7 +21,7 @@ const ROLE_META: Record<NCBRole, {
     color: '#0f5ca8',
     Icon: Camera,
     features: [
-      { Icon: Camera, label: 'Live Scanner', desc: 'Photograph colorimetric test pouches and run real-time CIELAB ΔE₂₀₀₀ + Gemini AI dual-engine analysis.', href: '/scanner' },
+      { Icon: Camera, label: 'Live Scanner', desc: 'Photograph test pouches and run instant on-device color matching plus smart AI visual verification.', href: '/scanner' },
       { Icon: FileText, label: 'NDPS Panchnama', desc: 'Auto-generate the statutory Section 52 Panchnama PDF with GPS co-ordinates, witness names and SHA-256 seal.', href: '/panchnama' },
       { Icon: ShieldCheck, label: 'Evidence Vault', desc: 'View all sealed scan records, download PDF certificates and track chain of custody.', href: '/vault' },
       { Icon: BookOpen, label: 'NDPS Legal Library', desc: 'Offline reference to NDPS Act sections, schedules and landmark judgments.', href: '/legal' },

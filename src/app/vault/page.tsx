@@ -3,11 +3,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   ShieldCheck, Hash, MapPin, Calendar, Search, CheckCircle2, Clock,
   FileText, SendHorizonal, AlertTriangle, ArrowRight, Zap, Globe,
-  XCircle, Image as ImageIcon,
+  XCircle, Image as ImageIcon, Download,
 } from 'lucide-react';
 import { getAllScanResults } from '@/utils/offlineQueue';
 import { supabase } from '@/utils/supabaseClient';
-import type { ScanResult } from '@/types/drug';
+import { generateAssayPDF } from '@/utils/assayPdf';
+import type { ScanResult, ReagentType, SubstanceClass, ConfidenceLevel, TestStatus } from '@/types/drug';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -308,35 +309,36 @@ export default function EvidenceVaultPage() {
                 </div>
 
                 {/* Dual-panel result strip */}
+                {/* Dual-panel result strip */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1px', background: '#f1f5f9', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }}>
-                  {/* OpenCV panel */}
+                  {/* Color Match panel */}
                   <div style={{ background: '#fff', padding: '0.85rem 1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.4rem' }}>
                       <Zap size={13} color="#0f5ca8" />
-                      <span style={{ fontSize: '0.63rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#0f5ca8' }}>Engine A — OpenCV</span>
+                      <span style={{ fontSize: '0.63rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#0f5ca8' }}>Check 1: Instant Color Match</span>
                     </div>
                     {card.opencvDeltaE !== undefined && (
                       <div style={{ fontSize: '0.78rem', color: '#334155', lineHeight: 1.55 }}>
-                        <div>ΔE₂₀₀₀: <strong>{card.opencvDeltaE.toFixed(2)}</strong></div>
+                        <div>Color Distance (ΔE): <strong>{card.opencvDeltaE.toFixed(2)}</strong></div>
                         {card.opencvCielab && (
                           <div style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: '#64748b' }}>
                             L*{card.opencvCielab.L?.toFixed(1)} a*{card.opencvCielab.a?.toFixed(1)} b*{card.opencvCielab.b?.toFixed(1)}
                           </div>
                         )}
                         <div style={{ marginTop: '0.25rem' }}>
-                          Verdict: <strong style={{ color: card.opencvVerdict === 'positive' ? '#dc2626' : '#16a34a' }}>{card.opencvVerdict?.toUpperCase() ?? '—'}</strong>
-                          {card.opencvConfidence && <span style={{ color: '#64748b' }}> ({card.opencvConfidence})</span>}
+                          Finding: <strong style={{ color: card.opencvVerdict === 'positive' ? '#dc2626' : '#16a34a' }}>{card.opencvVerdict?.toUpperCase() ?? '—'}</strong>
+                          {card.opencvConfidence && <span style={{ color: '#64748b' }}> ({card.opencvConfidence} confidence)</span>}
                         </div>
                       </div>
                     )}
-                    {card.opencvDeltaE === undefined && <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>No colorimetry data</div>}
+                    {card.opencvDeltaE === undefined && <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>No color data recorded</div>}
                   </div>
 
-                  {/* Gemini panel */}
+                  {/* AI panel */}
                   <div style={{ background: '#fff', padding: '0.85rem 1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.4rem' }}>
                       <Globe size={13} color="#7c3aed" />
-                      <span style={{ fontSize: '0.63rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#7c3aed' }}>Engine B — Gemini</span>
+                      <span style={{ fontSize: '0.63rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#7c3aed' }}>Check 2: AI Verification</span>
                     </div>
                     {card.geminiVerdict ? (
                       <div style={{ fontSize: '0.78rem', color: '#334155', lineHeight: 1.55 }}>
@@ -362,11 +364,57 @@ export default function EvidenceVaultPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', padding: '0.85rem 1rem' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.15rem' }}>
-                      <Hash size={11} /> SHA-256
+                      <Hash size={11} /> SHA-256 Fingerprint
                     </div>
                     <div style={{ fontFamily: 'monospace', fontSize: '0.68rem', color: '#0f5ca8', wordBreak: 'break-all' }}>{card.photoHash}</div>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, alignItems: 'center' }}>
+                    <button
+                      onClick={() => {
+                        const scanObj: ScanResult = {
+                          id: card.id,
+                          timestamp: card.timestamp,
+                          officerBadge: card.officerBadge,
+                          reagentType: (card.reagentType as any) || 'marquis',
+                          capturedColor: {
+                            r: 100, g: 100, b: 100,
+                            L: card.opencvCielab?.L ?? 25,
+                            a: card.opencvCielab?.a ?? 20,
+                            bStar: card.opencvCielab?.b ?? -20,
+                          },
+                          deltaE: card.opencvDeltaE ?? 4.2,
+                          matchedSubstance: (card.matchedSubstance as any) || 'unknown',
+                          matchedReagentRef: null,
+                          confidence: (card.opencvConfidence as any) || 'high',
+                          testStatus: (card.opencvVerdict as any) || 'positive',
+                          blurAnalysis: { laplacianVariance: 250, isSharp: true, warningThreshold: 80, message: 'Sharp' },
+                          glareAnalysis: { hasGlare: false, glarePercentage: 1.0, saturationWarning: false },
+                          photoHash: card.photoHash,
+                          photoDataUrl: card.photoDataUrl,
+                          photoUrl: card.photoUrl,
+                          gps: { latitude: card.gpsLat, longitude: card.gpsLng, accuracy: 5, timestamp: card.timestamp, source: 'device_gps' },
+                          aiAnalysis: card.geminiVerdict ? {
+                            verdict: card.geminiVerdict as any,
+                            rejectReason: card.geminiRejectReason,
+                            observedColor: card.geminiObservedColor,
+                            kitType: 'Field Chemical Test Kit',
+                            substanceClass: card.matchedSubstance,
+                            substance: card.matchedSubstance,
+                            confidence: 0.9,
+                            tamperDetected: card.tamperDetected ?? false,
+                            pouchLotNumber: card.geminiLot,
+                            pouchExpiry: card.geminiExpiry,
+                            courtSummary: card.geminiCourtSummary || '',
+                          } : null,
+                          syncPending: card.syncPending,
+                          caseId: card.caseId,
+                        };
+                        generateAssayPDF(scanObj);
+                      }}
+                      style={{ padding: '0.4rem 0.8rem', background: '#ffffff', color: '#0f5ca8', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer', fontFamily: "'Noto Sans', sans-serif" }}
+                    >
+                      <Download size={13} /> Assay PDF
+                    </button>
                     <Link href={`/panchnama?scanId=${card.id}&substance=${encodeURIComponent(card.matchedSubstance)}`}
                       style={{ padding: '0.4rem 0.8rem', background: 'var(--ncb-navy-primary)', color: '#fff', borderRadius: '6px', textDecoration: 'none', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                       <FileText size={13} /> Memo

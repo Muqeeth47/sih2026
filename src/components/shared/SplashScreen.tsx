@@ -27,19 +27,36 @@ export default function SplashScreen({ onComplete }: { onComplete: () => void })
       gap: '1.5rem',
       animation: 'none',
     }}>
-      {/* Emblem */}
+      {/* Emblems */}
       <div style={{
-        width: 88,
-        height: 88,
-        borderRadius: '16px',
-        background: '#0f5ca8',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        boxShadow: '0 8px 24px rgba(15, 92, 168, 0.25)',
+        gap: '1.25rem',
         animation: 'ncb-scale-in 0.5s ease',
       }}>
-        <Shield size={48} color="white" strokeWidth={1.8} />
+        <div style={{
+          padding: '0.6rem 0.9rem',
+          background: '#ffffff',
+          borderRadius: '16px',
+          boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
+          border: '1px solid #e2e8f0',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+        }}>
+          <img
+            src="/images/mha-logo.png"
+            alt="Ministry of Home Affairs"
+            style={{ height: '48px', width: 'auto', objectFit: 'contain' }}
+          />
+          <div style={{ width: '1px', height: '36px', background: '#cbd5e1' }} />
+          <img
+            src="/images/ncb-logo.png"
+            alt="Narcotics Control Bureau"
+            style={{ height: '48px', width: 'auto', objectFit: 'contain' }}
+          />
+        </div>
       </div>
 
       {/* Text */}
@@ -50,18 +67,25 @@ export default function SplashScreen({ onComplete }: { onComplete: () => void })
         transition: 'all 0.5s ease',
       }}>
         <div style={{
-          fontSize: '1.4rem',
+          fontSize: '1.5rem',
           fontWeight: 900,
           color: '#0f172a',
           letterSpacing: '-0.02em',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.4rem',
         }}>
-          DRUG-SEAL AI
+          <span>SAKSHYA AI</span>
+          <span style={{ fontSize: '0.9rem', color: '#0f5ca8', background: '#e0f2fe', padding: '2px 8px', borderRadius: '6px', fontWeight: 800 }}>
+            साक्ष्य
+          </span>
         </div>
-        <div style={{ fontSize: '0.82rem', color: '#0f5ca8', fontWeight: 700, marginTop: '0.25rem', letterSpacing: '0.04em' }}>
-          Narcotics Control Bureau
+        <div style={{ fontSize: '0.78rem', color: '#0f5ca8', fontWeight: 700, marginTop: '0.35rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+          सत्यमेव साक्ष्यम् · Narcotics Evidence Protocol
         </div>
         <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.15rem' }}>
-          Ministry of Home Affairs · Government of India
+          Narcotics Control Bureau · Ministry of Home Affairs
         </div>
       </div>
 

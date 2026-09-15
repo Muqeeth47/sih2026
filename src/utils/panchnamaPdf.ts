@@ -259,7 +259,7 @@ export function generatePanchnamaPDF(form: PanchnamaForm): void {
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(71, 85, 105);
-    doc.text(`DRUG-SEAL AI | NCB | Generated: ${new Date().toISOString()} | Page ${p} of ${totalPages}`, pageW / 2, footY, { align: 'center' });
+    doc.text(`SAKSHYA AI (साक्ष्य) | Narcotics Control Bureau | Generated: ${new Date().toISOString()} | Page ${p} of ${totalPages}`, pageW / 2, footY, { align: 'center' });
     doc.text('This document is computer-generated and is valid only with authorized signature and NCB seal.', pageW / 2, footY - 4, { align: 'center' });
   }
 
