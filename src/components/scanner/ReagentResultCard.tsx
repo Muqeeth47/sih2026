@@ -226,18 +226,28 @@ export default function ReagentResultCard({ result, onReset, onSaveToVault }: Re
             {result.aiAnalysis ? (
               <div className="space-y-3">
                 {/* Court Summary Quote Box */}
-                <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3.5">
+                <div className={`border rounded-xl p-3.5 ${
+                  result.aiAnalysis.verdict === 'REJECTED'
+                    ? 'bg-red-50/70 border-red-200'
+                    : 'bg-emerald-50/70 border-emerald-200'
+                }`}>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[0.68rem] font-extrabold uppercase text-emerald-800 tracking-wider">
+                    <span className={`text-[0.68rem] font-extrabold uppercase tracking-wider ${
+                      result.aiAnalysis.verdict === 'REJECTED' ? 'text-red-800' : 'text-emerald-800'
+                    }`}>
                       Court-Admissible Statement (NDPS Act §52)
                     </span>
-                    {result.aiAnalysis.reason && (
-                      <span className="text-emerald-800 text-[0.7rem] font-black uppercase tracking-wider">
-                        {result.aiAnalysis.reason}
+                    {(result.aiAnalysis.rejectReason || result.aiAnalysis.reason) && (
+                      <span className={`text-[0.7rem] font-black uppercase tracking-wider ${
+                        result.aiAnalysis.verdict === 'REJECTED' ? 'text-red-800' : 'text-emerald-800'
+                      }`}>
+                        {result.aiAnalysis.rejectReason || result.aiAnalysis.reason}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-emerald-950 font-medium leading-relaxed mb-0">
+                  <p className={`text-xs font-medium leading-relaxed mb-0 ${
+                    result.aiAnalysis.verdict === 'REJECTED' ? 'text-red-950' : 'text-emerald-950'
+                  }`}>
                     &ldquo;{result.aiAnalysis.courtSummary}&rdquo;
                   </p>
                 </div>

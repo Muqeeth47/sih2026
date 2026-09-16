@@ -676,68 +676,6 @@ export default function LoginPage() {
 
 
           </div>
-
-          {/* ── Bottom Quick Demo Sign-in Strip (Matching User Reference Image) ── */}
-          <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#0f5ca8' }} />
-              <span
-                style={{
-                  fontSize: '0.7rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  color: '#0f5ca8',
-                }}
-              >
-                QUICK DEMO SIGN-IN
-              </span>
-            </div>
-            <p style={{ fontSize: '0.76rem', color: '#64748b', margin: '0 0 0.85rem' }}>
-              Open a ready-to-use workspace instantly for evaluation & presentation.
-            </p>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {DEMO_ROLES.map(demo => {
-                const Icon = demo.role === 'ncb_io' ? User : demo.role === 'ncb_fsl' ? FlaskConical : demo.role === 'ncb_zonal' ? Building2 : Scale;
-                return (
-                  <button
-                    key={demo.role}
-                    type="button"
-                    onClick={() => handleDemoInstantLogin(demo.role)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.35rem',
-                      padding: '0.55rem 0.5rem',
-                      background: '#ffffff',
-                      border: '1px solid #cbd5e1',
-                      borderRadius: '8px',
-                      color: '#0f172a',
-                      fontSize: '0.74rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      transition: 'all 0.15s',
-                    }}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLElement).style.borderColor = '#0f5ca8';
-                      (e.currentTarget as HTMLElement).style.background = '#eaf4fd';
-                      (e.currentTarget as HTMLElement).style.color = '#0f5ca8';
-                    }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLElement).style.borderColor = '#cbd5e1';
-                      (e.currentTarget as HTMLElement).style.background = '#ffffff';
-                      (e.currentTarget as HTMLElement).style.color = '#0f172a';
-                    }}
-                  >
-                    <Icon size={14} />
-                    <span>{demo.label.split(' ')[0]} demo</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
       </div>
     </div>

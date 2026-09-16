@@ -168,7 +168,7 @@ export const REAGENT_MATRIX: ReagentReference[] = [
   makeRef('marquis', 'methamphetamine',    'Orange → Brown',    '#c2621a', 15, 'Orange turning brown — methamphetamine',               'UNODC-ST/NAR/13 §4.2.3'),
   makeRef('marquis', 'fentanyl',           'Orange-Brown',      '#d97706', 15, 'Orange to light brown — fentanyl synthetic opioid',    'UNODC-ST/NAR/13 §4.2.4'),
   makeRef('marquis', 'methaqualone',       'Yellow-Orange',     '#a16207', 16, 'Yellow-orange reaction — methaqualone (mandrax)',      'UNODC-ST/NAR/13 §4.2.5'),
-  makeRef('marquis', 'cannabis',           'No reaction',       '#f5f0e8', 18, 'No color change — cannabis (negative for Marquis)',    'UNODC-ST/NAR/13 §4.2.6'),
+  makeRef('marquis', 'negative',           'No reaction',       '#f5f0e8', 18, 'No color change — negative (cannabis does not react with Marquis; test with Duquenois-Levine)', 'UNODC-ST/NAR/13 §4.2.6'),
   makeRef('marquis', 'negative',           'No reaction',       '#f5f0e8', 18, 'No reaction observed',                                'UNODC-ST/NAR/13 §4.1'),
 
   // ── SCOTT REAGENT (Cocaine/Crack) ───────────────────────────

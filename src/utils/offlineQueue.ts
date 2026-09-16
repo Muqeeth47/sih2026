@@ -107,6 +107,18 @@ export async function getAllScanResults(): Promise<unknown[]> {
   });
 }
 
+/** Delete a scan result from IndexedDB */
+export async function deleteScanResult(id: string): Promise<void> {
+  const database = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = database.transaction(STORE_SCANS, 'readwrite');
+    const store = tx.objectStore(STORE_SCANS);
+    store.delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 /** Save a panchnama record */
 export async function savePanchnama(record: unknown): Promise<void> {
   const database = await openDB();

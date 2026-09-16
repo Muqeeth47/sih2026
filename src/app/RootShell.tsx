@@ -1,6 +1,6 @@
 'use client';
 // RootShell.tsx — Handles splash screen + layout switching between public/authed views
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import AccessibilityBar from '@/components/layout/AccessibilityBar';
@@ -8,33 +8,11 @@ import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import Footer from '@/components/layout/Footer';
-import SplashScreen from '@/components/shared/SplashScreen';
 import OfflineSyncBadge from '@/components/shared/OfflineSyncBadge';
 
 const PUBLIC_PATHS = ['/', '/login', '/about', '/terms', '/privacy', '/architecture', '/how-to-use'];
 
 export default function RootShell({ children }: { children: React.ReactNode }) {
-  const [splashVisible, setSplashVisible] = useState(false);
-
-  useEffect(() => {
-    // Only check sessionStorage after hydration is complete to prevent SSR mismatch
-    try {
-      if (sessionStorage.getItem('ncb_splash_shown') !== '1') {
-        setSplashVisible(true);
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  const handleSplashComplete = useCallback(() => {
-    try {
-      sessionStorage.setItem('ncb_splash_shown', '1');
-    } catch {
-      // ignore
-    }
-    setSplashVisible(false);
-  }, []);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -72,7 +50,6 @@ export default function RootShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {splashVisible && <SplashScreen onComplete={handleSplashComplete} />}
       {/* Top chrome: always visible */}
       <AccessibilityBar />
       <Header

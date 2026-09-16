@@ -68,9 +68,9 @@ Return ONLY a valid JSON object conforming to this exact structure:
   "tamperDetected": true or false,
   "pouchLotNumber": "string or null",
   "pouchExpiry": "string or null",
-  "courtSummary": "One formal sentence for NDPS Act Sec. 52 panchnama, describing the observable reaction only. If REJECTED write: Image rejected — officer directed to retake."
+  "courtSummary": "A concise, formal NDPS Act Sec. 52 statement under 40 words describing the observable reaction only. If REJECTED write under 20 words: 'Image rejected — [Reason]. Officer directed to retake photo of reacted test kit.'"
 }
-`.trim();
+Note: Ensure courtSummary is strictly 40 words or fewer.`.trim();
 }
 
 export async function POST(req: NextRequest) {
@@ -159,6 +159,13 @@ export async function POST(req: NextRequest) {
           parsed = JSON.parse(jsonMatch[0]);
         }
 
+        // Enforce max 40 words on courtSummary
+        let courtSummary = (parsed.courtSummary ?? '').trim();
+        const words = courtSummary.split(/\s+/);
+        if (words.length > 40) {
+          courtSummary = words.slice(0, 40).join(' ') + '.';
+        }
+
         // Map to AIAnalysisResult
         const analysis: AIAnalysisResult = {
           verdict:       parsed.verdict ?? 'ACCEPTED',
@@ -169,7 +176,7 @@ export async function POST(req: NextRequest) {
           tamperDetected: parsed.tamperDetected ?? false,
           pouchLotNumber: parsed.pouchLotNumber ?? null,
           pouchExpiry:   parsed.pouchExpiry ?? null,
-          courtSummary:  parsed.courtSummary ?? '',
+          courtSummary,
           // Legacy fields filled from qualitative data only
           substance:     parsed.substanceClass ?? 'Field observation — see court summary',
           confidence:    parsed.verdict === 'ACCEPTED' ? 0.9 : 0.0,

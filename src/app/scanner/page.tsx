@@ -44,9 +44,9 @@ function ScanResultPanel({
 }) {
   const ai = result.aiAnalysis;
   const cvConf = confidenceColor(result.confidence);
-  const isPositive = result.testStatus === 'positive';
   const geminiAccepted = ai?.verdict === 'ACCEPTED';
   const geminiRejected = ai?.verdict === 'REJECTED';
+  const isPositive = result.testStatus === 'positive' && !geminiRejected;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontFamily: "'Noto Sans', sans-serif" }}>
@@ -77,11 +77,11 @@ function ScanResultPanel({
             <span style={{ fontWeight: 900, color: '#0f172a', fontSize: '0.95rem' }}>{result.caseId}</span>
             <span style={{
               padding: '2px 8px', borderRadius: '4px', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase',
-              background: isPositive ? '#fee2e2' : '#f0fdf4',
-              color: isPositive ? '#dc2626' : '#16a34a',
-              border: `1px solid ${isPositive ? '#fecaca' : '#bbf7d0'}`,
+              background: geminiRejected ? '#fee2e2' : (isPositive ? '#fee2e2' : '#f0fdf4'),
+              color: geminiRejected ? '#dc2626' : (isPositive ? '#dc2626' : '#16a34a'),
+              border: `1px solid ${geminiRejected ? '#fecaca' : (isPositive ? '#fecaca' : '#bbf7d0')}`,
             }}>
-              {isPositive ? 'POSITIVE' : 'NEGATIVE'}
+              {geminiRejected ? 'REJECTED — RETAKE REQUIRED' : (isPositive ? 'POSITIVE' : 'NEGATIVE')}
             </span>
           </div>
           <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.5rem' }}>
@@ -122,6 +122,17 @@ function ScanResultPanel({
           </div>
         </div>
 
+        {geminiRejected && (
+          <div style={{
+            background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px',
+            padding: '0.6rem 0.8rem', fontSize: '0.75rem', color: '#991b1b', marginBottom: '0.75rem',
+            display: 'flex', alignItems: 'center', gap: '0.4rem',
+          }}>
+            <AlertTriangle size={14} color="#dc2626" />
+            <span>AI visual inspection rejected image (kit not clearly detected/framed). On-device color reading of background pixels is unverified. Retake photo of reacted test kit.</span>
+          </div>
+        )}
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.6rem', marginBottom: '0.75rem' }}>
           {[
             { label: 'Color Distance (ΔE)', value: result.deltaE.toFixed(2) },
@@ -145,13 +156,17 @@ function ScanResultPanel({
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
           padding: '0.4rem 0.85rem', borderRadius: '6px',
-          background: cvConf.bg, border: `1px solid ${cvConf.border}`,
+          background: geminiRejected ? '#fee2e2' : cvConf.bg, border: `1px solid ${geminiRejected ? '#fecaca' : cvConf.border}`,
         }}>
-          {isPositive
-            ? <CheckCircle2 size={14} color={cvConf.color} />
-            : <XCircle size={14} color={cvConf.color} />}
-          <span style={{ fontSize: '0.78rem', fontWeight: 800, color: cvConf.color, textTransform: 'uppercase' }}>
-            {result.testStatus.toUpperCase()} — {result.confidence.toUpperCase()} CONFIDENCE
+          {geminiRejected ? (
+            <XCircle size={14} color="#dc2626" />
+          ) : isPositive ? (
+            <CheckCircle2 size={14} color={cvConf.color} />
+          ) : (
+            <XCircle size={14} color={cvConf.color} />
+          )}
+          <span style={{ fontSize: '0.78rem', fontWeight: 800, color: geminiRejected ? '#dc2626' : cvConf.color, textTransform: 'uppercase' }}>
+            {geminiRejected ? 'UNVERIFIED — RETAKE REQUIRED' : `${result.testStatus.toUpperCase()} — ${result.confidence.toUpperCase()} CONFIDENCE`}
           </span>
         </div>
       </div>
@@ -446,7 +461,13 @@ export default function ScannerPage() {
         if (dE < lowestDeltaE) { lowestDeltaE = dE; bestMatch = ref; }
       }
       const confidence = deltaEToConfidence(lowestDeltaE, bestMatch.deltaEThreshold);
-      const isPositive = bestMatch.substanceClass !== 'negative' && confidence !== 'inconclusive';
+      const isNegativeMatch =
+        bestMatch.substanceClass === 'negative' ||
+        bestMatch.expectedColorName.toLowerCase().includes('no reaction') ||
+        bestMatch.description.toLowerCase().includes('negative') ||
+        bestMatch.description.toLowerCase().includes('no color change');
+
+      const isColorPositive = !isNegativeMatch && confidence !== 'inconclusive';
 
       // 3. SHA-256 hash
       const photoHash = await sha256Hash(dataUrl);
@@ -487,10 +508,11 @@ export default function ScannerPage() {
         console.warn('Cloud AI unavailable, continuing with OpenCV only:', cloudErr);
       }
 
-      // 7. If Gemini rejected image (e.g. not a test kit) — treat as blur/bad photo
-      if (aiResult?.verdict === 'REJECTED') {
-        // Still show result but let user decide — don't block (Gemini might be wrong)
-      }
+      // 7. Harmonize OpenCV & Gemini Verdicts
+      const isGeminiRejected = aiResult?.verdict === 'REJECTED';
+      const finalIsPositive = isGeminiRejected ? false : isColorPositive;
+      const finalTestStatus = isGeminiRejected ? 'negative' : (isColorPositive ? 'positive' : 'negative');
+      const finalMatchedSubstance = (isGeminiRejected || !isColorPositive) ? 'negative' : bestMatch.substanceClass;
 
       // 8. Compile scan record
       const scanRecord: ScanResult = {
@@ -500,10 +522,10 @@ export default function ScannerPage() {
         reagentType: selectedReagent,
         capturedColor: colorReading,
         deltaE: Math.round(lowestDeltaE * 10) / 10,
-        matchedSubstance: isPositive ? bestMatch.substanceClass : 'negative',
+        matchedSubstance: finalMatchedSubstance,
         matchedReagentRef: bestMatch,
-        confidence,
-        testStatus: isPositive ? 'positive' : 'negative',
+        confidence: isGeminiRejected ? 'inconclusive' : confidence,
+        testStatus: finalTestStatus,
         blurAnalysis: finalBlur,
         glareAnalysis: finalGlare,
         photoHash,

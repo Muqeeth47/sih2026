@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAKSHYA AI — System Architecture Diagram</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background: #F4EFEB;
+      color: #0F172A;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .canvas-container {
+      width: 1360px;
+      background: #FFFDF9;
+      border: 2px solid #E5DFD5;
+      border-radius: 24px;
+      padding: 32px 36px 28px;
+      box-shadow: 0 20px 60px rgba(120, 100, 80, 0.12), 0 2px 6px rgba(0,0,0,0.04);
+      position: relative;
+    }
+
+    /* Top Title Header */
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 2px solid #EDE6DD;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .gov-badge {
+      width: 48px;
+      height: 48px;
+      background: #0F5CA8;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFF;
+      font-weight: 900;
+      font-size: 22px;
+      box-shadow: 0 6px 14px rgba(15, 92, 168, 0.25);
+    }
+
+    .title-group h1 {
+      font-size: 24px;
+      font-weight: 900;
+      color: #0F172A;
+      letter-spacing: -0.02em;
+    }
+    .title-group h1 span {
+      color: #0F5CA8;
+    }
+
+    .title-group p {
+      font-size: 12.5px;
+      color: #64748B;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .header-badges {
+      display: flex;
+      gap: 8px;
+    }
+
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #F1EAE2;
+      border: 1px solid #DCD3C7;
+      color: #334155;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 9999px;
+    }
+    .pill-badge strong { color: #0F5CA8; }
+
+    /* Flow Layout: 3 Horizontal Tiers with Rich Nodes & Connected SVG Arrows */
+    .diagram-body {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+    }
+
+    /* Row 1: Frontend Capture & Offline Edge Processing */
+    .tier-card {
+      background: #FFFFFF;
+      border: 1.5px solid #E2D9CE;
+      border-radius: 18px;
+      padding: 16px 20px;
+      position: relative;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+    }
+
+    .tier-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .tier-tag {
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #0F5CA8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tier-tag .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #0F5CA8;
+    }
+
+    .tier-nodes-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      position: relative;
+    }
+
+    /* Interactive Node Box */
+    .node-box {
+      background: #FAF6F0;
+      border: 1.5px solid #E5DDD2;
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .node-box:hover {
+      background: #FFFFFF;
+      border-color: #0F5CA8;
+      box-shadow: 0 6px 18px rgba(15, 92, 168, 0.12);
+    }
+
+    .node-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-weight: 900;
+      font-size: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .logo-nextjs { background: #000000; color: #FFF; }
+    .logo-opencv { background: #E11D48; color: #FFF; }
+    .logo-gemini { background: linear-gradient(135deg, #1E40AF, #7E22CE); color: #FFF; }
+    .logo-crypto { background: #0D9488; color: #FFF; }
+    .logo-idb    { background: #D97706; color: #FFF; }
+    .logo-supa   { background: #16A34A; color: #FFF; }
+    .logo-map    { background: #2563EB; color: #FFF; }
+    .logo-vercel { background: #000000; color: #FFF; }
+    .logo-court  { background: #475569; color: #FFF; }
+
+    .node-title-group h3 {
+      font-size: 13px;
+      font-weight: 800;
+      color: #0F172A;
+      line-height: 1.2;
+    }
+    .node-title-group span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #0F5CA8;
+    }
+
+    .node-body {
+      font-size: 11px;
+      color: #475569;
+      line-height: 1.45;
+    }
+
+    .node-footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .chip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      background: #EFE8DF;
+      border: 1px solid #DCD3C6;
+      color: #334155;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Flow Connector Ribbon */
+    .flow-ribbon {
+      background: #F5EFE6;
+      border: 1.5px dashed #D6CABA;
+      border-radius: 12px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #1E293B;
+    }
+    .step-num {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #0F5CA8;
+      color: #FFF;
+      font-size: 10px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .flow-arrow {
+      color: #94A3B8;
+      font-weight: 900;
+      font-size: 14px;
+    }
+
+    /* Bottom Agency Clearances Strip */
+    .agency-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .agency-card {
+      background: #FFFFFF;
+      border: 1.5px solid #E2D9CE;
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .agency-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #EAF4FD;
+      color: #0F5CA8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .agency-info h4 {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #0F172A;
+    }
+    .agency-info p {
+      font-size: 10px;
+      color: #64748B;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="canvas-container" id="diagram-export">
+
+    <!-- Header -->
+    <div class="top-header">
+      <div class="header-left">
+        <div class="gov-badge">सा</div>
+        <div class="title-group">
+          <h1>SAKSHYA AI · <span>System Architecture & Dataflow</span></h1>
+          <p>Edge Spectrophotometry, Multimodal AI, Cryptographic Proof &amp; Multi-Agency Cloud Pipeline</p>
+        </div>
+      </div>
+
+      <div class="header-badges">
+        <div class="pill-badge">Problem: <strong>SIH26231</strong></div>
+        <div class="pill-badge">Color Engine: <strong>CIELAB ΔE₂₀₀₀ (&lt;5ms)</strong></div>
+        <div class="pill-badge">Admissibility: <strong>Sec 63 BSA 2023</strong></div>
+        <div class="pill-badge">Cloud: <strong>Vercel + Supabase</strong></div>
+      </div>
+    </div>
+
+    <div class="diagram-body">
+
+      <!-- TIER 1: CLIENT EDGE & OFFLINE COMPUTATION -->
+      <div class="tier-card">
+        <div class="tier-header">
+          <div class="tier-tag">
+            <span class="dot"></span> TIER 1: OFFLINE-FIRST CLIENT &amp; COMPUTER VISION EDGE (100% OFFLINE)
+          </div>
+          <span style="font-size: 10.5px; font-weight: 800; color: #16A34A; background: #DCFCE7; padding: 2px 8px; border-radius: 4px;">
+            ✓ ZERO SIGNAL DEPENDENCY
+          </span>
+        </div>
+
+        <div class="tier-nodes-row">
+          
+          <!-- Node 1: Next.js PWA -->
+          <div class="node-box">
+            <div class="node-top">
+              <div class="logo-badge logo-nextjs">N</div>
+              <div class="node-title-group">
+                <h3>Next.js 15 PWA</h3>
+                <span>FRONTEND CORE</span>
+              </div>
+            </div>
+            <p class="node-body">Installable PWA with React 19, Tailwind CSS 4, and background Service Worker caching.</p>
+            <div class="node-footer">
+              <span class="chip">App Router</span>
+              <span class="chip">TypeScript</span>
+              <span class="chip">PWA Cache</span>
+            </div>
+          </div>
+
+          <!-- Node 2: WebRTC Camera & Filters -->
+          <div class="node-box">
+            <div class="node-top">
+              <div class="logo-badge" style="background:#0284C7; color:#FFF;">📷</div>
+              <div class="node-title-group">
+                <h3>WebRTC Viewfinder</h3>
+                <span>OPTICAL FILTERS</span>
+              </div>
+            </div>
+            <p class="node-body">40% center reticle targeting with real-time Laplacian blur variance (&gt;90) &amp; glare rejection.</p>
+            <div class="node-footer">
+              <span class="chip">HTML5 Canvas</span>
+              <span class="chip">MediaStreams</span>
+              <span class="chip">Anti-Glare</span>
+            </div>
+          </div>
+
+          <!-- Node 3: OpenCV & CIELAB ΔE Engine -->
+          <div class="node-box">
+            <div class="node-top">
+              <div class="logo-badge logo-opencv">ΔE</div>
+              <div class="node-title-group">
+                <h3>OpenCV Colorimetry</h3>
+                <span>SPECTROPHOTOMETER</span>
+              </div>
+            </div>
+            <p class="node-body">Converts RGB → XYZ → CIELAB to calculate ΔE₂₀₀₀ color difference vs UNODC ST/NAR/13 standards in &lt;5ms.</p>
+            <div class="node-footer">
+              <span class="chip">CIEDE2000</span>
+              <span class="chip">ΔE ≤ 12.0</span>
+              <span class="chip">&lt; 5ms Exec</span>
+            </div>
+          </div>
+
+          <!-- Node 4: WebCrypto SHA-256 Seal -->
+          <div class="node-box">
+            <div class="node-top">
+              <div class="logo-badge logo-crypto">🔒</div>
+              <div class="node-title-group">
+                <h3>WebCrypto SHA-256</h3>
+                <span>EVIDENCE SEAL</span>
+              </div>
+            </div>
+            <p class="node-body">Client-side cryptographic hash of uncompressed image locked with satellite GPS &amp; atomic timestamp.</p>
+            <div class="node-footer">
+              <span class="chip">SHA-256</span>
+              <span class="chip">GPS Lock</span>
+              <span class="chip">Sec 63 BSA</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- MIDDLE DATA FLOW RIBBON -->
+      <div class="flow-ribbon">
+        <div class="flow-step">
+          <div class="step-num">1</div>
+          <span>Roadside Capture</span>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-step">
+          <div class="step-num">2</div>
+          <span>5ms CIELAB ΔE Color Match</span>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-step">
+          <div class="step-num">3</div>
+          <span>SHA-256 Photo Hash Seal</span>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-step">
+          <div class="step-num">4</div>
+          <span>IndexedDB Offline Sync Queue</span>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-step">
+          <div class="step-num">5</div>
+          <span>Supabase Realtime Cloud Ledger</span>
+        </div>
+      </div>
+
+      <!-- TIER 2: LOCAL SYNC, BACKEND CLOUD & MULTIMODAL AI -->
+      <div class="tier-card">
+        <div class="tier-header">
+          <div class="tier-tag">
+            <span class="dot"></span> TIER 2: LOCAL STORAGE, BACKEND CLOUD &amp; MULTIMODAL AI
+          </div>
+          <span style="font-size: 10.5px; font-weight: 800; color: #0F5CA8; background: #EAF4FD; padding: 2px 8px; border-radius: 4px;">
+            SECURE MULTI-TENANT ARCHITECTURE
+          </span>
+        </div>
+
+        <div class="tier-nodes-row">
+          
+          <!-- Node 5: IndexedDB Offline Queue -->
+          <div class="node-box">
+            <div class="node-top">
+              <div class="logo-badge logo-idb">💾</div>
+              <div class="node-title-group">
+                <h3>IndexedDB Storage</h3>
+                <span>LOCAL QUEUE</span>
+              </div>
+            </div>
+            <p class="node-body">Local-first persistent storage buffer holding scans and panchnamas with auto-sync manager.</p>
+            <div class="node-footer">
+              <span class="chip">IDB Store</span>
+              <span class="chip">FIFO Queue</span>
+              <span class="chip">Auto-Sync</span>
+            </div>
+          </div>
+
+          <!-- Node 6: Google Gemini Multimodal AI -->
+          <div class="node-box">
+            <div class="node-top">
+              <div class="logo-badge logo-gemini">✦</div>
+              <div class="node-title-group">
+                <h3>Google Gemini AI</h3>
+                <span>MULTIMODAL OCR</span>
+              </div>
+            </div>
+            <p class="node-body">Multimodal AI OCR extracting reagent batch numbers, expiry dates, and verifying tamper integrity.</p>
+            <div class="node-footer">
+              <span class="chip">Gemini 1.5/2.0</span>
+              <span class="chip">Batch OCR</span>
+              <span class="chip">Court Notes</span>
+            </div>
+          </div>
+
+          <!-- Node 7: Supabase Backend DB -->
+          <div class="node-box">
+            <div class="node-top">
+              <div class="logo-badge logo-supa">⚡</div>
+              <div class="node-title-group">
+                <h3>Supabase Postgres</h3>
+                <span>DATABASE &amp; RLS</span>
+              </div>
+            </div>
+            <p class="node-body">PostgreSQL database with Row-Level Security (RLS) policies and real-time WebSocket subscriptions.</p>
+            <div class="node-footer">
+              <span class="chip">Postgres</span>
+              <span class="chip">RLS Security</span>
+              <span class="chip">WebSockets</span>
+            </div>
+          </div>
+
+          <!-- Node 8: Leaflet GIS & Vercel Edge -->
+          <div class="node-box">
+            <div class="node-top">
+              <div class="logo-badge logo-map">🗺️</div>
+              <div class="node-title-group">
+                <h3>Leaflet &amp; Vercel</h3>
+                <span>GIS &amp; HOSTING</span>
+              </div>
+            </div>
+            <p class="node-body">Interactive pan-India seizure heatmap clusters hosted on Vercel Global Edge CDN.</p>
+            <div class="node-footer">
+              <span class="chip">Leaflet Maps</span>
+              <span class="chip">Vercel Edge</span>
+              <span class="chip">GeoJSON</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TIER 3: MULTI-AGENCY OPERATIONAL ROLES -->
+      <div class="agency-strip">
+        <div class="agency-card">
+          <div class="agency-icon">👮</div>
+          <div class="agency-info">
+            <h4>Field IO (Roadside)</h4>
+            <p>Interdiction, Edge ΔE, 1-Click Panchnama</p>
+          </div>
+        </div>
+
+        <div class="agency-card">
+          <div class="agency-icon">🔬</div>
+          <div class="agency-info">
+            <h4>FSL Forensic Chemist</h4>
+            <p>Spectra Calibration &amp; Lot Verification</p>
+          </div>
+        </div>
+
+        <div class="agency-card">
+          <div class="agency-icon">🏛️</div>
+          <div class="agency-info">
+            <h4>Zonal Director HQ</h4>
+            <p>Pan-India Seizure Heatmap &amp; Trends</p>
+          </div>
+        </div>
+
+        <div class="agency-card">
+          <div class="agency-icon">⚖️</div>
+          <div class="agency-info">
+            <h4>Special NDPS Court</h4>
+            <p>SHA-256 Hash Audit &amp; Fast Admissions</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+</html>
