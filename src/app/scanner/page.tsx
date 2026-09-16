@@ -5,7 +5,7 @@ import { useGeoLocation } from '@/hooks/useGeoLocation';
 import { useAuth } from '@/hooks/useAuth';
 import ViewfinderOverlay from '@/components/scanner/ViewfinderOverlay';
 import { REAGENT_MATRIX, REAGENT_DISPLAY_NAMES, getReagentRefs } from '@/utils/reagentMatrix';
-import { extractColorReading, deltaE2000, deltaEToConfidence } from '@/utils/colorMath';
+import { extractColorReading, deltaE2000, deltaEToConfidence, isSkinOrHumanSubject } from '@/utils/colorMath';
 import { analyzeBlur, type BlurResult } from '@/utils/blurDetector';
 import { analyzeGlare, type GlareResult } from '@/utils/glareFilter';
 import { sha256Hash } from '@/utils/cryptoSeal';
@@ -465,6 +465,12 @@ export default function ScannerPage() {
       const finalBlur = analyzeBlur(regionImageData);
       const finalGlare = analyzeGlare(regionImageData);
 
+      // Check for human face / skin / portrait / unrelated non-pouch surface
+      const isSkin = isSkinOrHumanSubject(
+        colorReading.r, colorReading.g, colorReading.b,
+        colorReading.L, colorReading.a, colorReading.bStar
+      );
+
       // 6. Cloud AI — Gemini (compressed to ~50KB for fast analysis)
       let aiResult: AIAnalysisResult | null = null;
       try {
@@ -479,6 +485,7 @@ export default function ScannerPage() {
             lowestDeltaE,
             matchedSubstance: bestMatch.substanceClass,
             expectedColor: bestMatch.expectedColorName,
+            isSkin,
           }),
         });
         if (aiResponse.ok) {
@@ -494,20 +501,55 @@ export default function ScannerPage() {
 
       // If AI service is unreachable (e.g. offline field raid), synthesize local forensic AI observation
       if (!aiResult) {
+        if (isSkin || lowestDeltaE > 16.0) {
+          aiResult = {
+            verdict: 'REJECTED',
+            rejectReason: isSkin
+              ? 'No authentic chemical drug test pouch detected (human face / skin / portrait framed).'
+              : 'No drug test pouch or characteristic chemical reaction visible in the frame.',
+            kitType: undefined,
+            observedColor: isSkin ? 'Human Face / Skin Surface' : 'Non-reagent background',
+            substanceClass: 'Negative',
+            tamperDetected: false,
+            pouchLotNumber: undefined,
+            pouchExpiry: undefined,
+            courtSummary: isSkin
+              ? 'Image rejected — Human face / skin detected. Officer directed to retake photo of reacted test kit.'
+              : 'Image rejected — No drug test pouch visible. Officer directed to retake photo of reacted test kit.',
+            substance: 'Negative',
+            confidence: 0.0,
+          };
+        } else {
+          aiResult = {
+            verdict: 'ACCEPTED',
+            rejectReason: undefined,
+            kitType: 'Forensic Reagent Test Pouch (NCB Standard)',
+            observedColor: isColorPositive ? (bestMatch.expectedColorName || 'Color transition noted') : 'No reaction / Unreacted fluid (Negative)',
+            substanceClass: isColorPositive ? bestMatch.substanceClass : 'negative',
+            tamperDetected: false,
+            pouchLotNumber: `NCB-${selectedReagent.toUpperCase().slice(0, 3)}-2026`,
+            pouchExpiry: '2028-12-31',
+            courtSummary: isColorPositive
+              ? `Field colorimetric reaction exhibiting characteristic transition for ${bestMatch.substanceClass} under Section 52 NDPS Act.`
+              : 'Chemical colorimetric assay shows no characteristic color reaction. Presumptive indication is negative under Section 52 NDPS Act.',
+            substance: isColorPositive ? bestMatch.substanceClass : 'negative',
+            confidence: isColorPositive ? 0.92 : 0.1,
+          };
+        }
+      } else if (isSkin && aiResult.verdict === 'ACCEPTED') {
+        // Fallback safeguard if cloud AI erroneously accepted a human face
         aiResult = {
-          verdict: 'ACCEPTED',
-          rejectReason: undefined,
-          kitType: 'Forensic Reagent Test Pouch (NCB Standard)',
-          observedColor: isColorPositive ? (bestMatch.expectedColorName || 'Color transition noted') : 'No reaction / Unreacted fluid (Negative)',
-          substanceClass: isColorPositive ? bestMatch.substanceClass : 'negative',
+          verdict: 'REJECTED',
+          rejectReason: 'No authentic chemical drug test pouch detected (human face / skin / portrait framed).',
+          kitType: undefined,
+          observedColor: 'Human Face / Skin Surface',
+          substanceClass: 'Negative',
           tamperDetected: false,
-          pouchLotNumber: `NCB-${selectedReagent.toUpperCase().slice(0, 3)}-2026`,
-          pouchExpiry: '2028-12-31',
-          courtSummary: isColorPositive
-            ? `Field colorimetric reaction exhibiting characteristic transition for ${bestMatch.substanceClass} under Section 52 NDPS Act.`
-            : 'Chemical colorimetric assay shows no characteristic color reaction. Presumptive indication is negative under Section 52 NDPS Act.',
-          substance: isColorPositive ? bestMatch.substanceClass : 'negative',
-          confidence: isColorPositive ? 0.92 : 0.1,
+          pouchLotNumber: undefined,
+          pouchExpiry: undefined,
+          courtSummary: 'Image rejected — Human face / skin detected. Officer directed to retake photo of reacted test kit.',
+          substance: 'Negative',
+          confidence: 0.0,
         };
       }
 

@@ -170,3 +170,16 @@ export function deltaEToConfidence(deltaE: number, threshold: number): 'high' | 
   if (deltaE <= threshold) return 'low';
   return 'inconclusive';
 }
+
+/**
+ * Detects human facial skin / hands / portrait / non-chemical surfaces
+ * Based on standardized CIELAB and RGB skin-locus colorimetry
+ */
+export function isSkinOrHumanSubject(
+  r: number, g: number, b: number,
+  L: number, a: number, bStar: number
+): boolean {
+  const labSkin = (L >= 30 && L <= 88) && (a >= 6 && a <= 28) && (bStar >= 9 && bStar <= 36);
+  const rgbSkin = (r > g) && (g > b) && ((r - g) >= 8) && ((g - b) >= 3) && (r > 65);
+  return labSkin && rgbSkin;
+}

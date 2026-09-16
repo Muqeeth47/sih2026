@@ -39,7 +39,8 @@ NOTES: ${criteria.notes}
 ═══ STEP 1 — IMAGE VALIDATION (check FIRST) ═══
 REJECT the image immediately if ANY of these are true:
   • No drug test pouch or kit is visible in the image
-  • The image is of an unrelated object, human hand, skin, road, person, background, wall
+  • The image contains a human face, portrait, selfie, skin, hand, person, body part
+  • The image is of an unrelated object, clothing, road, vehicle, background, desk, wall
   • The image is blurry or out-of-focus (reagent chamber unreadable)
   • Severe specular glare obscures the fluid colour
   • The reagent fluid chamber is hidden, empty, or not reacted yet
@@ -79,26 +80,30 @@ function generateHeuristicForensicFallback(
   isColorPositive?: boolean,
   lowestDeltaE?: number,
   matchedSubstance?: string,
-  expectedColor?: string
+  expectedColor?: string,
+  isSkin?: boolean
 ): AIAnalysisResult {
   const criteria = REAGENT_CRITERIA[reagentType.toLowerCase()] || REAGENT_CRITERIA.marquis;
   const isTooSmall = !imageBase64 || imageBase64.length < 300;
 
-  // If Delta E is greater than 18.0, the color does NOT match any calibrated forensic chemical reaction or clear pouch
-  // (e.g. purple shirt, hand, wall, clothing) -> REJECT immediately
-  const isUnrelatedObject = isTooSmall || (typeof lowestDeltaE === 'number' && lowestDeltaE > 18.0);
+  // If skin detected or Delta E > 15.0, reject immediately
+  const isUnrelatedObject = isTooSmall || Boolean(isSkin) || (typeof lowestDeltaE === 'number' && lowestDeltaE > 15.0);
 
   if (isUnrelatedObject) {
     return {
       verdict: 'REJECTED',
-      rejectReason: 'No authentic drug test pouch or chemical reaction detected in frame (unrelated subject / clothing detected).',
+      rejectReason: isSkin
+        ? 'No authentic chemical drug test pouch detected (human face / skin / portrait framed).'
+        : 'No authentic drug test pouch or chemical reaction detected in frame (unrelated subject / clothing detected).',
       kitType: undefined,
-      observedColor: 'Non-reagent surface (Clothing / Background / Skin)',
+      observedColor: isSkin ? 'Human Face / Skin Surface' : 'Non-reagent surface (Clothing / Background / Skin)',
       substanceClass: 'Negative',
       tamperDetected: false,
       pouchLotNumber: undefined,
       pouchExpiry: undefined,
-      courtSummary: 'Image rejected — No drug test pouch visible. Officer directed to retake photo of reacted test kit.',
+      courtSummary: isSkin
+        ? 'Image rejected — Human face / skin detected. Officer directed to retake photo of reacted test kit.'
+        : 'Image rejected — No drug test pouch visible. Officer directed to retake photo of reacted test kit.',
       substance: 'Negative',
       confidence: 0.0,
     };
@@ -142,7 +147,7 @@ function generateHeuristicForensicFallback(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { imageBase64, reagentType, isColorPositive, lowestDeltaE, matchedSubstance, expectedColor } = body;
+    const { imageBase64, reagentType, isColorPositive, lowestDeltaE, matchedSubstance, expectedColor, isSkin } = body;
 
     if (!imageBase64) {
       return NextResponse.json({ success: false, error: 'No image data received.' }, { status: 400 });
@@ -246,7 +251,8 @@ export async function POST(req: NextRequest) {
       isColorPositive,
       lowestDeltaE,
       matchedSubstance,
-      expectedColor
+      expectedColor,
+      isSkin
     );
     return NextResponse.json({
       success: true,
