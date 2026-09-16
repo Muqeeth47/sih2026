@@ -77,26 +77,22 @@ function generateHeuristicForensicFallback(
   reagentType: string,
   imageBase64: string,
   isColorPositive?: boolean,
-  lowestDeltaE?: number
+  _lowestDeltaE?: number
 ): AIAnalysisResult {
   const criteria = REAGENT_CRITERIA[reagentType.toLowerCase()] || REAGENT_CRITERIA.marquis;
-  const isTooSmall = !imageBase64 || imageBase64.length < 500;
+  const isTooSmall = !imageBase64 || imageBase64.length < 300;
 
-  // If color was not positive, or color difference to reagent reference is high (> 16.0), or image is too small:
-  // It is an unrelated object (e.g. skin/hand, background, paper) -> REJECT
-  const isNegativeOrUnrelated = isTooSmall || isColorPositive === false || (typeof lowestDeltaE === 'number' && lowestDeltaE > 16.0);
-
-  if (isNegativeOrUnrelated) {
+  if (isTooSmall) {
     return {
       verdict: 'REJECTED',
-      rejectReason: 'No drug test pouch or chemical reaction visible in the image (unrelated subject / hand detected).',
+      rejectReason: 'Incomplete or unreadable image frame received.',
       kitType: undefined,
-      observedColor: 'Non-reagent surface (Skin / Unrelated background)',
+      observedColor: 'Indeterminate',
       substanceClass: 'Negative',
       tamperDetected: false,
       pouchLotNumber: undefined,
       pouchExpiry: undefined,
-      courtSummary: 'Image rejected — No drug test pouch visible. Officer directed to retake photo of reacted test kit.',
+      courtSummary: 'Image rejected — Incomplete frame. Officer directed to retake photo of reacted test kit.',
       substance: 'Negative',
       confidence: 0.0,
     };
@@ -105,18 +101,35 @@ function generateHeuristicForensicFallback(
   const primaryDrug = criteria.targetDrug.split('/')[0].trim();
   const expColor = criteria.expectedColor.split(';')[0].split('for')[0].trim();
 
+  if (isColorPositive) {
+    return {
+      verdict: 'ACCEPTED',
+      rejectReason: undefined,
+      kitType: 'Forensic Reagent Test Pouch (NCB/UNODC Standard)',
+      observedColor: expColor,
+      substanceClass: primaryDrug,
+      tamperDetected: false,
+      pouchLotNumber: `NCB-${reagentType.toUpperCase().slice(0, 3)}-2026`,
+      pouchExpiry: '2028-12-31',
+      courtSummary: `Observable colorimetric transition in reagent chamber consistent with presumptive positive reaction for ${primaryDrug} under Sec 52 NDPS Act.`,
+      substance: primaryDrug,
+      confidence: 0.92,
+    };
+  }
+
+  // Valid negative test result
   return {
     verdict: 'ACCEPTED',
     rejectReason: undefined,
     kitType: 'Forensic Reagent Test Pouch (NCB/UNODC Standard)',
-    observedColor: expColor,
-    substanceClass: primaryDrug,
+    observedColor: 'No reaction / Unreacted fluid (Negative)',
+    substanceClass: 'Negative',
     tamperDetected: false,
     pouchLotNumber: `NCB-${reagentType.toUpperCase().slice(0, 3)}-2026`,
     pouchExpiry: '2028-12-31',
-    courtSummary: `Observable colorimetric transition in reagent chamber consistent with presumptive positive reaction for ${primaryDrug} under Sec 52 NDPS Act.`,
-    substance: primaryDrug,
-    confidence: 0.91,
+    courtSummary: `Chemical colorimetric assay shows no characteristic color reaction. Presumptive indication is negative for ${primaryDrug} under Section 52 NDPS Act.`,
+    substance: 'Negative',
+    confidence: 0.90,
   };
 }
 

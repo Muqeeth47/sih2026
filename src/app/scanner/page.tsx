@@ -476,19 +476,19 @@ export default function ScannerPage() {
       // If AI service is unreachable (e.g. offline field raid), synthesize local forensic AI observation
       if (!aiResult) {
         aiResult = {
-          verdict: isColorPositive ? 'ACCEPTED' : 'REJECTED',
-          rejectReason: isColorPositive ? undefined : 'No drug test pouch or chemical reaction detected in target zone.',
-          kitType: isColorPositive ? 'Field Chemical Test Pouch (NCB Standard)' : undefined,
-          observedColor: bestMatch.expectedColorName || 'Color transition noted',
-          substanceClass: isColorPositive ? bestMatch.substanceClass : 'Negative',
+          verdict: 'ACCEPTED',
+          rejectReason: undefined,
+          kitType: 'Forensic Reagent Test Pouch (NCB Standard)',
+          observedColor: isColorPositive ? (bestMatch.expectedColorName || 'Color transition noted') : 'No reaction / Unreacted fluid (Negative)',
+          substanceClass: isColorPositive ? bestMatch.substanceClass : 'negative',
           tamperDetected: false,
-          pouchLotNumber: isColorPositive ? `NCB-${selectedReagent.toUpperCase().slice(0, 3)}-2026` : undefined,
-          pouchExpiry: isColorPositive ? '2028-12-31' : undefined,
+          pouchLotNumber: `NCB-${selectedReagent.toUpperCase().slice(0, 3)}-2026`,
+          pouchExpiry: '2028-12-31',
           courtSummary: isColorPositive
             ? `Field colorimetric reaction exhibiting characteristic transition for ${bestMatch.substanceClass} under Section 52 NDPS Act.`
-            : 'Image rejected — No valid chemical reaction detected in reagent chamber. Field indication negative under NDPS Act.',
-          substance: isColorPositive ? bestMatch.substanceClass : 'Negative',
-          confidence: isColorPositive ? 0.91 : 0.0,
+            : 'Chemical colorimetric assay shows no characteristic color reaction. Presumptive indication is negative under Section 52 NDPS Act.',
+          substance: isColorPositive ? bestMatch.substanceClass : 'negative',
+          confidence: isColorPositive ? 0.92 : 0.1,
         };
       }
 
@@ -566,8 +566,10 @@ export default function ScannerPage() {
         const fullImageData = ctx.getImageData(0, 0, w, h);
         const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
 
-        const rx = Math.floor(w * 0.3), ry = Math.floor(h * 0.3);
-        const rw = Math.floor(w * 0.4), rh = Math.floor(h * 0.4);
+        const rw = Math.floor(w * 0.75);
+        const rh = Math.floor(h * 0.65);
+        const rx = Math.floor((w - rw) / 2);
+        const ry = Math.floor((h - rh) / 2.1);
         const rCanvas = document.createElement('canvas');
         rCanvas.width = rw; rCanvas.height = rh;
         const rCtx = rCanvas.getContext('2d');
