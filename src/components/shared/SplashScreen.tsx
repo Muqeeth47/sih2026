@@ -45,6 +45,14 @@ export default function SplashScreen({ onComplete }: { onComplete: () => void })
           99% { opacity: 0; }
           100% { opacity: 0; pointer-events: none; visibility: hidden; display: none; }
         }
+        @keyframes ncb-scale-in {
+          from { transform: scale(0.92); opacity: 0.5; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes ncb-pulse {
+          0%, 100% { transform: scale(0.8); opacity: 0.5; }
+          50% { transform: scale(1.2); opacity: 1; }
+        }
       `}</style>
       {/* Emblems */}
       <div style={{

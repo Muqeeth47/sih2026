@@ -9,10 +9,21 @@ import Sidebar from '@/components/layout/Sidebar';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import Footer from '@/components/layout/Footer';
 import OfflineSyncBadge from '@/components/shared/OfflineSyncBadge';
+import SplashScreen from '@/components/shared/SplashScreen';
 
 const PUBLIC_PATHS = ['/', '/login', '/about', '/terms', '/privacy', '/architecture', '/how-to-use'];
 
 export default function RootShell({ children }: { children: React.ReactNode }) {
+  const [showSplash, setShowSplash] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return !sessionStorage.getItem('sakshya_splash_seen');
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  });
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -50,6 +61,17 @@ export default function RootShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      {showSplash && (
+        <SplashScreen
+          onComplete={() => {
+            try {
+              sessionStorage.setItem('sakshya_splash_seen', '1');
+            } catch {}
+            setShowSplash(false);
+          }}
+        />
+      )}
+
       {/* Top chrome: always visible */}
       <AccessibilityBar />
       <Header
