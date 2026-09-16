@@ -424,13 +424,13 @@ export default function ScannerPage() {
     setCurrentResult(null);
 
     try {
-      // 1. Colorimetric extraction
+      // 1. Colorimetric extraction across the reticle region (isolates chemical fluid automatically)
       const colorReading: ColorReading = extractColorReading(
         regionImageData,
-        Math.floor(regionImageData.width * 0.25),
-        Math.floor(regionImageData.height * 0.25),
-        Math.floor(regionImageData.width * 0.5),
-        Math.floor(regionImageData.height * 0.5)
+        0,
+        0,
+        regionImageData.width,
+        regionImageData.height
       );
 
       // 2. CIELAB ΔE₂₀₀₀ matching

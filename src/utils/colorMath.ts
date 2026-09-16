@@ -135,7 +135,7 @@ export function deltaE2000(
   );
 }
 
-/** Build a ColorReading from canvas pixel data at a region */
+/** Build a ColorReading from canvas pixel data by isolating the reacted chemical fluid from packaging background */
 export function extractColorReading(
   imageData: ImageData,
   regionX: number,
@@ -143,24 +143,54 @@ export function extractColorReading(
   regionW: number,
   regionH: number
 ): ColorReading {
-  let totalR = 0, totalG = 0, totalB = 0, count = 0;
+  const pixels: { r: number; g: number; b: number; L: number; a: number; bStar: number; chroma: number }[] = [];
 
-  for (let y = regionY; y < regionY + regionH; y++) {
-    for (let x = regionX; x < regionX + regionW; x++) {
+  const step = Math.max(1, Math.floor(Math.min(regionW, regionH) / 100));
+
+  for (let y = regionY; y < regionY + regionH; y += step) {
+    for (let x = regionX; x < regionX + regionW; x += step) {
       const idx = (y * imageData.width + x) * 4;
-      totalR += imageData.data[idx];
-      totalG += imageData.data[idx + 1];
-      totalB += imageData.data[idx + 2];
-      count++;
+      const r = imageData.data[idx];
+      const g = imageData.data[idx + 1];
+      const b = imageData.data[idx + 2];
+      const [L, a, bStar] = rgbToLab(r, g, b);
+      const chroma = Math.sqrt(a * a + bStar * bStar);
+
+      // Filter extreme glare highlights and dark shadows
+      if (L >= 4 && L <= 97) {
+        pixels.push({ r, g, b, L, a, bStar, chroma });
+      }
     }
   }
 
-  const r = Math.round(totalR / count);
-  const g = Math.round(totalG / count);
-  const b = Math.round(totalB / count);
-  const [L, a, bStar] = rgbToLab(r, g, b);
+  if (pixels.length === 0) {
+    return { r: 240, g: 240, b: 240, L: 94.0, a: 0.0, bStar: 1.0 };
+  }
 
-  return { r, g, b, L, a, bStar };
+  // Sort by chroma descending to identify the chemical fluid reaction
+  pixels.sort((p1, p2) => p2.chroma - p1.chroma);
+
+  // If there are saturated chemical reaction pixels (chroma >= 8), cluster the fluid region
+  const saturatedPixels = pixels.filter(p => p.chroma >= 8.0);
+  const cluster = (saturatedPixels.length >= 15)
+    ? saturatedPixels.slice(0, Math.max(15, Math.floor(saturatedPixels.length * 0.45)))
+    : pixels.slice(0, Math.max(15, Math.floor(pixels.length * 0.5)));
+
+  let totR = 0, totG = 0, totB = 0, totL = 0, totA = 0, totBStar = 0;
+  for (const p of cluster) {
+    totR += p.r; totG += p.g; totB += p.b;
+    totL += p.L; totA += p.a; totBStar += p.bStar;
+  }
+  const n = cluster.length;
+
+  return {
+    r: Math.round(totR / n),
+    g: Math.round(totG / n),
+    b: Math.round(totB / n),
+    L: Math.round((totL / n) * 10) / 10,
+    a: Math.round((totA / n) * 10) / 10,
+    bStar: Math.round((totBStar / n) * 10) / 10,
+  };
 }
 
 /** Convert ΔE to human-readable confidence */
