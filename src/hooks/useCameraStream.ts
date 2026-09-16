@@ -80,25 +80,27 @@ export function useCameraStream() {
   /**
    * Capture current video frame to canvas and return ImageData + dataURL
    */
-  const captureFrame = useCallback((targetSize = 1280): { dataUrl: string; imageData: ImageData } | null => {
+  const captureFrame = useCallback((targetSize = 1280): { dataUrl: string; imageData: ImageData; canvas: HTMLCanvasElement } | null => {
     if (!videoRef.current || !streamRef.current) return null;
 
     const video = videoRef.current;
-    if (video.videoWidth === 0 || video.videoHeight === 0) return null;
+    const vw = video.videoWidth || (video as any).clientWidth || 640;
+    const vh = video.videoHeight || (video as any).clientHeight || 480;
+    if (vw === 0 || vh === 0) return null;
 
     const canvas = document.createElement('canvas');
-    const aspect = video.videoWidth / video.videoHeight;
+    const aspect = vw / vh;
     canvas.width = targetSize;
     canvas.height = Math.round(targetSize / aspect);
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) return null;
 
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
 
-    return { dataUrl, imageData };
+    return { dataUrl, imageData, canvas };
   }, []);
 
   /**
@@ -108,7 +110,7 @@ export function useCameraStream() {
     const frame = captureFrame();
     if (!frame) return null;
 
-    const { imageData, dataUrl } = frame;
+    const { imageData, dataUrl, canvas } = frame;
     const w = imageData.width;
     const h = imageData.height;
 
@@ -121,16 +123,11 @@ export function useCameraStream() {
     const regionCanvas = document.createElement('canvas');
     regionCanvas.width = rw;
     regionCanvas.height = rh;
-    const rCtx = regionCanvas.getContext('2d');
+    const rCtx = regionCanvas.getContext('2d', { willReadFrequently: true });
     if (!rCtx) return null;
 
-    const srcCanvas = document.createElement('canvas');
-    srcCanvas.width = w;
-    srcCanvas.height = h;
-    const srcCtx = srcCanvas.getContext('2d');
-    if (!srcCtx) return null;
-    srcCtx.putImageData(imageData, 0, 0);
-    rCtx.drawImage(srcCanvas, rx, ry, rw, rh, 0, 0, rw, rh);
+    // Directly crop from the rendered canvas (fast & universally supported on mobile)
+    rCtx.drawImage(canvas, rx, ry, rw, rh, 0, 0, rw, rh);
     const regionImageData = rCtx.getImageData(0, 0, rw, rh);
 
     return { dataUrl, imageData, regionImageData };

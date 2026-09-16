@@ -30,7 +30,7 @@ export default function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
 
   return (
     <header
-      className="sticky top-0 z-50 h-16 bg-white border-b border-slate-200 flex items-center px-3 sm:px-5 gap-2 sm:gap-3 shadow-xs"
+      className="sticky top-0 z-50 h-14 sm:h-16 bg-white border-b border-slate-200 flex items-center px-2.5 sm:px-5 gap-1.5 sm:gap-3 shadow-xs"
     >
       {/* Hamburger Toggle (3 horizontal lines) */}
       {mounted && isAuthenticated && (
@@ -41,7 +41,7 @@ export default function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
             border: '1px solid #e2e8f0',
             color: '#0f172a',
             cursor: 'pointer',
-            padding: '0.45rem',
+            padding: '0.38rem 0.42rem',
             borderRadius: '6px',
             display: 'flex',
             alignItems: 'center',
@@ -53,54 +53,54 @@ export default function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
           onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           aria-label={isSidebarOpen ? 'Close sidebar navigation' : 'Open sidebar navigation'}
         >
-          {isSidebarOpen ? <X size={18} strokeWidth={2.2} /> : <Menu size={18} strokeWidth={2.2} />}
+          {isSidebarOpen ? <X size={17} strokeWidth={2.2} /> : <Menu size={17} strokeWidth={2.2} />}
         </button>
       )}
 
       {/* Logo & Identity */}
       <Link
         href={mounted && isAuthenticated ? '/overview' : '/'}
-        style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', textDecoration: 'none', flexShrink: 0 }}
+        style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', textDecoration: 'none', flexShrink: 0, minWidth: 0 }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
           <img
             src="/images/mha-logo.png"
-            alt="Ministry of Home Affairs, Government of India"
-            style={{ height: '32px', width: 'auto', objectFit: 'contain' }}
-            className="h-7 sm:h-9"
+            alt="Ministry of Home Affairs"
+            style={{ width: 'auto', objectFit: 'contain' }}
+            className="h-6 sm:h-8"
             loading="eager"
             decoding="async"
           />
-          <div style={{ width: '1px', height: '22px', background: '#cbd5e1' }} className="hidden sm:block" />
+          <div style={{ width: '1px', height: '18px', background: '#cbd5e1' }} className="hidden sm:block" />
           <img
             src="/images/ncb-logo.png"
-            alt="Narcotics Control Bureau Emblem"
-            style={{ height: '32px', width: 'auto', objectFit: 'contain' }}
-            className="h-7 sm:h-9"
+            alt="NCB Emblem"
+            style={{ width: 'auto', objectFit: 'contain' }}
+            className="h-6 sm:h-8"
             loading="eager"
             decoding="async"
           />
         </div>
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div
             style={{
-              fontSize: '0.92rem',
+              fontSize: '0.86rem',
               fontWeight: 900,
               color: '#0f172a',
               lineHeight: 1.15,
               letterSpacing: '-0.02em',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.35rem',
+              gap: '0.25rem',
             }}
           >
-            <span>SAKSHYA AI</span>
-            <span style={{ fontSize: '0.72rem', color: '#0f5ca8', fontWeight: 800, background: '#e0f2fe', padding: '1px 5px', borderRadius: '4px' }}>
+            <span className="truncate">SAKSHYA AI</span>
+            <span style={{ fontSize: '0.66rem', color: '#0f5ca8', fontWeight: 800, background: '#e0f2fe', padding: '1px 4px', borderRadius: '4px' }}>
               साक्ष्य
             </span>
           </div>
           <div
-            className="hidden sm:block text-[9.5px] text-slate-500 font-bold tracking-wider uppercase"
+            className="hidden md:block text-[9.5px] text-slate-500 font-bold tracking-wider uppercase"
           >
             Narcotics Control Bureau · MHA
           </div>
@@ -110,140 +110,139 @@ export default function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
       {/* Spacer */}
       <div style={{ flex: 1 }} />
 
-      {/* Online Status (Typographic Status) */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.35rem',
-          flexShrink: 0,
-        }}
-      >
-        <div style={{ width: 7, height: 7, borderRadius: '50%', background: isOnline ? '#15803d' : '#d97706' }} />
-        <span className="hidden sm:inline text-[11px] font-extrabold uppercase tracking-wider" style={{ color: isOnline ? '#15803d' : '#d97706' }}>
-          {isOnline ? 'Online' : 'Offline'}
-        </span>
-      </div>
+      {/* Right Controls Container */}
+      <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+        {/* Online Status (Desktop) */}
+        <div
+          className="hidden sm:flex items-center gap-1.5 flex-shrink-0"
+        >
+          <div style={{ width: 7, height: 7, borderRadius: '50%', background: isOnline ? '#15803d' : '#d97706' }} />
+          <span className="text-[10.5px] font-extrabold uppercase tracking-wider" style={{ color: isOnline ? '#15803d' : '#d97706' }}>
+            {isOnline ? 'Online' : 'Offline'}
+          </span>
+        </div>
 
-      {mounted && isAuthenticated && (
-        <>
-          <div className="flex-shrink-0">
-            <OfflineSyncBadge compact />
-          </div>
+        {mounted && isAuthenticated && (
+          <>
+            <div className="hidden sm:block flex-shrink-0">
+              <OfflineSyncBadge compact />
+            </div>
 
-          {/* Compact Role Badge - visible on mobile and desktop */}
-          {user && (
-            <Link
-              href={
-                user.role === 'ncb_io' ? '/field/vault' :
-                user.role === 'ncb_fsl' ? '/fsl/vault' :
-                user.role === 'ncb_zonal' ? '/zonal/vault' : '/court/vault'
-              }
+            {/* Compact Role Badge */}
+            {user && (
+              <Link
+                href={
+                  user.role === 'ncb_io' ? '/field/vault' :
+                  user.role === 'ncb_fsl' ? '/fsl/vault' :
+                  user.role === 'ncb_zonal' ? '/zonal/vault' : '/court/vault'
+                }
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.2rem',
+                  padding: '0.2rem 0.45rem',
+                  borderRadius: '6px',
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  textDecoration: 'none',
+                  background:
+                    user.role === 'ncb_io' ? '#e0f2fe' :
+                    user.role === 'ncb_fsl' ? '#ede9fe' :
+                    user.role === 'ncb_zonal' ? '#fef9ec' : '#f0fdf4',
+                  color:
+                    user.role === 'ncb_io' ? '#0f5ca8' :
+                    user.role === 'ncb_fsl' ? '#7c3aed' :
+                    user.role === 'ncb_zonal' ? '#b45309' : '#065f46',
+                  border: `1px solid ${
+                    user.role === 'ncb_io' ? '#bae6fd' :
+                    user.role === 'ncb_fsl' ? '#ddd6fe' :
+                    user.role === 'ncb_zonal' ? '#fde68a' : '#bbf7d0'
+                  }`,
+                  flexShrink: 0,
+                }}
+                title="Current Role — click to open Evidence Vault"
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                  {user.role === 'ncb_io' && <Shield size={11} />}
+                  {user.role === 'ncb_fsl' && <FlaskConical size={11} />}
+                  {user.role === 'ncb_zonal' && <Building2 size={11} />}
+                  {user.role === 'ncb_court' && <Scale size={11} />}
+                  <span>{
+                    user.role === 'ncb_io' ? 'IO' :
+                    user.role === 'ncb_fsl' ? 'FSL' :
+                    user.role === 'ncb_zonal' ? 'ZONAL' : 'COURT'
+                  }</span>
+                </span>
+              </Link>
+            )}
+
+            {/* User Badge - desktop only */}
+            <div
+              className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-slate-50 rounded-lg border border-slate-200"
+            >
+              <div
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  background: '#0f5ca8',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  color: 'white',
+                  flexShrink: 0,
+                }}
+              >
+                {user?.name?.charAt(0) ?? 'O'}
+              </div>
+              <div>
+                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#0f172a', lineHeight: 1.2 }}>
+                  {user?.name}
+                </div>
+                <div style={{ fontSize: '0.62rem', color: '#64748b', fontFamily: 'monospace' }}>
+                  {user?.badge}
+                </div>
+              </div>
+            </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={logout}
               style={{
+                background: '#ffffff',
+                border: '1px solid #cbd5e1',
+                color: '#475569',
+                cursor: 'pointer',
+                padding: '0.35rem 0.5rem',
+                borderRadius: '6px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.25rem',
-                padding: '0.22rem 0.55rem',
-                borderRadius: '6px',
-                fontSize: '0.7rem',
-                fontWeight: 800,
-                textDecoration: 'none',
-                background:
-                  user.role === 'ncb_io' ? '#e0f2fe' :
-                  user.role === 'ncb_fsl' ? '#ede9fe' :
-                  user.role === 'ncb_zonal' ? '#fef9ec' : '#f0fdf4',
-                color:
-                  user.role === 'ncb_io' ? '#0f5ca8' :
-                  user.role === 'ncb_fsl' ? '#7c3aed' :
-                  user.role === 'ncb_zonal' ? '#b45309' : '#065f46',
-                border: `1px solid ${
-                  user.role === 'ncb_io' ? '#bae6fd' :
-                  user.role === 'ncb_fsl' ? '#ddd6fe' :
-                  user.role === 'ncb_zonal' ? '#fde68a' : '#bbf7d0'
-                }`,
+                fontSize: '0.72rem',
+                fontWeight: 600,
                 flexShrink: 0,
+                transition: 'all 0.15s',
               }}
-              title="Current Role — click to open Evidence Vault"
-            >
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                {user.role === 'ncb_io' && <Shield size={11} />}
-                {user.role === 'ncb_fsl' && <FlaskConical size={11} />}
-                {user.role === 'ncb_zonal' && <Building2 size={11} />}
-                {user.role === 'ncb_court' && <Scale size={11} />}
-                <span>{
-                  user.role === 'ncb_io' ? 'IO' :
-                  user.role === 'ncb_fsl' ? 'FSL' :
-                  user.role === 'ncb_zonal' ? 'ZONAL' : 'COURT'
-                }</span>
-              </span>
-            </Link>
-          )}
-
-          {/* User Badge - expanded on desktop */}
-          <div
-            className="hidden md:flex items-center gap-2 px-2.5 py-1 bg-slate-50 rounded-lg border border-slate-200"
-          >
-            <div
-              style={{
-                width: 24,
-                height: 24,
-                borderRadius: '50%',
-                background: '#0f5ca8',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.7rem',
-                fontWeight: 800,
-                color: 'white',
-                flexShrink: 0,
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#fef2f2';
+                e.currentTarget.style.borderColor = '#fca5a5';
+                e.currentTarget.style.color = '#dc2626';
               }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#ffffff';
+                e.currentTarget.style.borderColor = '#cbd5e1';
+                e.currentTarget.style.color = '#475569';
+              }}
+              title="Sign out"
             >
-              {user?.name?.charAt(0) ?? 'O'}
-            </div>
-            <div>
-              <div style={{ fontSize: '0.74rem', fontWeight: 700, color: '#0f172a', lineHeight: 1.2 }}>
-                {user?.name}
-              </div>
-              <div style={{ fontSize: '0.64rem', color: '#64748b', fontFamily: 'monospace' }}>
-                {user?.badge}
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={logout}
-            style={{
-              background: '#ffffff',
-              border: '1px solid #cbd5e1',
-              color: '#475569',
-              cursor: 'pointer',
-              padding: '0.4rem 0.6rem',
-              borderRadius: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.3rem',
-              fontSize: '0.74rem',
-              fontWeight: 600,
-              flexShrink: 0,
-              transition: 'all 0.15s',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#fef2f2';
-              e.currentTarget.style.borderColor = '#fca5a5';
-              e.currentTarget.style.color = '#dc2626';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#ffffff';
-              e.currentTarget.style.borderColor = '#cbd5e1';
-              e.currentTarget.style.color = '#475569';
-            }}
-            title="Sign out"
-          >
-            <LogOut size={13} />
-            <span className="hidden sm:inline">Sign Out</span>
-          </button>
-        </>
-      )}
+              <LogOut size={13} />
+              <span className="hidden sm:inline">Sign Out</span>
+            </button>
+          </>
+        )}
+      </div>
     </header>
   );
 }

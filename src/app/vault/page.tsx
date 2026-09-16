@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import {
   canEscalate, escalateSeizure, ESCALATION_BUTTON_LABEL,
   ESCALATION_STATUS_META, ROLE_QUEUE_STATUS,
+  ROLE_ESCALATION_DESTINATIONS, getStoredEscalationInfo,
   type EscalationStatus, type NCBRole,
 } from '@/utils/escalation';
 
@@ -24,13 +25,6 @@ const ROLE_COLORS: Record<NCBRole, string> = {
   ncb_zonal: '#b45309',
   ncb_court: '#065f46',
 };
-
-const ESCALATION_TARGETS: { value: EscalationStatus; label: string; icon: React.ElementType }[] = [
-  { value: 'fsl_review',   label: 'Forward to FSL Lab',   icon: FlaskConical },
-  { value: 'zonal_review', label: 'Escalate to Zonal HQ', icon: Building2 },
-  { value: 'court_review', label: 'Submit to NDPS Court', icon: Scale },
-  { value: 'resolved',     label: 'Mark Resolved',        icon: CheckCircle2 },
-];
 
 // ── Detailed Forensic Report Modal ──────────────────────────────────────────
 function ReportDetailModal({ card, role, onClose }: { card: VaultCard; role: NCBRole; onClose: () => void }) {
@@ -112,6 +106,46 @@ function ReportDetailModal({ card, role, onClose }: { card: VaultCard; role: NCB
               </div>
             </div>
           </div>
+
+          {/* Cross-Role Handover Dossier & Officer Note */}
+          {(card.escalationStatus || card.escalationNote) && (
+            <div style={{ background: '#fefce8', border: '1.5px solid #facc15', borderRadius: '10px', padding: '0.85rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.45rem', flexWrap: 'wrap', gap: '0.4rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <SendHorizonal size={15} color="#b45309" />
+                  <span style={{ fontSize: '0.76rem', fontWeight: 800, color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Cross-Role Handover Dossier & Escalation Record
+                  </span>
+                </div>
+                {card.escalationStatus && ESCALATION_STATUS_META[card.escalationStatus as EscalationStatus] && (
+                  <span style={{
+                    background: ESCALATION_STATUS_META[card.escalationStatus as EscalationStatus].bg,
+                    color: ESCALATION_STATUS_META[card.escalationStatus as EscalationStatus].color,
+                    padding: '0.2rem 0.6rem', borderRadius: '5px', fontSize: '0.68rem', fontWeight: 800,
+                    border: `1px solid ${ESCALATION_STATUS_META[card.escalationStatus as EscalationStatus].color}50`,
+                  }}>
+                    Stage: {ESCALATION_STATUS_META[card.escalationStatus as EscalationStatus].label}
+                  </span>
+                )}
+              </div>
+
+              <div style={{ background: '#ffffff', padding: '0.75rem 0.85rem', borderRadius: '7px', border: '1px solid #fde047', fontSize: '0.76rem', color: '#713f12', lineHeight: 1.55, marginBottom: '0.45rem' }}>
+                <strong style={{ color: '#854d0e', display: 'block', fontSize: '0.68rem', textTransform: 'uppercase', marginBottom: '0.25rem', letterSpacing: '0.04em' }}>
+                  Forwarding / Escalation Note:
+                </strong>
+                {card.escalationNote ? (
+                  <span style={{ fontStyle: 'italic', fontWeight: 600, color: '#0f172a' }}>&ldquo;{card.escalationNote}&rdquo;</span>
+                ) : (
+                  <span style={{ color: '#a16207' }}>Standard custody transfer — specimen forwarded along the statutory chain of custody.</span>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.68rem', color: '#854d0e', flexWrap: 'wrap' }}>
+                {card.escalatedBy && <div>Forwarded By: <strong style={{ color: '#0f172a' }}>{card.escalatedBy}</strong></div>}
+                {card.escalatedAt && <div>Transferred On: <strong style={{ color: '#0f172a' }}>{new Date(card.escalatedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })}</strong></div>}
+              </div>
+            </div>
+          )}
 
           {/* Evidence Photo + Geolocation Strip */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '1rem', alignItems: 'stretch' }}>
@@ -241,61 +275,68 @@ function ReportDetailModal({ card, role, onClose }: { card: VaultCard; role: NCB
   );
 }
 
-// ── Escalation modal ──────────────────────────────────────────────────────────
+// ── Strict Role Escalation Modal ──────────────────────────────────────────
 function EscalateModal({ caseId, role, badge, onClose, onDone }: {
   caseId: string; role: NCBRole; badge: string; onClose: () => void; onDone: () => void;
 }) {
-  const defaultVal: EscalationStatus =
-    role === 'ncb_io' ? 'fsl_review' :
-    role === 'ncb_fsl' ? 'zonal_review' :
-    role === 'ncb_zonal' ? 'court_review' : 'resolved';
-  const [target, setTarget] = useState<EscalationStatus>(defaultVal);
-  const [note, setNote]     = useState('');
-  const [busy, setBusy]     = useState(false);
-  const [err, setErr]       = useState('');
+  const destInfo = ROLE_ESCALATION_DESTINATIONS[role] || ROLE_ESCALATION_DESTINATIONS.ncb_io;
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr]   = useState('');
 
   const submit = async () => {
     setBusy(true); setErr('');
-    const res = await escalateSeizure(caseId, role, badge, note, target);
+    const res = await escalateSeizure(caseId, role, badge, note, destInfo.target);
     setBusy(false);
     if (res.success) { onDone(); onClose(); }
     else setErr(res.error ?? 'Unknown error');
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div style={{ background: '#fff', borderRadius: '14px', padding: '1.5rem', width: '100%', maxWidth: 430, boxShadow: '0 20px 60px rgba(0,0,0,0.28)', fontFamily: "'Noto Sans', sans-serif" }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backdropFilter: 'blur(3px)' }}>
+      <div style={{ background: '#fff', borderRadius: '14px', padding: '1.5rem', width: '100%', maxWidth: 460, boxShadow: '0 20px 60px rgba(0,0,0,0.28)', fontFamily: "'Noto Sans', sans-serif" }}>
+        
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.85rem' }}>
           <SendHorizonal size={18} color="#0f5ca8" />
-          <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>Escalate / Forward Case</h2>
-        </div>
-        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 0.75rem', lineHeight: 1.6 }}>
-          Case <strong style={{ color: '#0f172a' }}>{caseId}</strong> — select destination tier:
-        </p>
-
-        {/* Destination tier radio selector */}
-        <div style={{ marginBottom: '0.85rem' }}>
-          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.4rem' }}>Forward To</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-            {ESCALATION_TARGETS.map(t => {
-              const Icon = t.icon;
-              return (
-                <label key={t.value}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', padding: '0.45rem 0.75rem', borderRadius: '8px', border: `1.5px solid ${target === t.value ? '#0f5ca8' : '#e2e8f0'}`, background: target === t.value ? '#eaf4fd' : '#f8fafc', cursor: 'pointer', fontSize: '0.82rem', fontWeight: target === t.value ? 700 : 500, color: '#0f172a', transition: 'all 0.12s' }}>
-                  <input type="radio" name="esc-tier" value={t.value} checked={target === t.value}
-                    onChange={() => setTarget(t.value)} style={{ accentColor: '#0f5ca8', cursor: 'pointer' }} />
-                  <Icon size={14} color={target === t.value ? '#0f5ca8' : '#64748b'} />
-                  <span>{t.label}</span>
-                </label>
-              );
-            })}
+          <div>
+            <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>Escalate / Forward Case</h2>
+            <span style={{ fontSize: '0.68rem', color: '#0f5ca8', fontWeight: 700 }}>{destInfo.stepNumber}</span>
           </div>
         </div>
 
-        <textarea value={note} onChange={e => setNote(e.target.value)}
-          placeholder="Reason / note for receiving officer (optional)" rows={2}
-          style={{ width: '100%', boxSizing: 'border-box', padding: '0.55rem 0.75rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.83rem', fontFamily: "'Noto Sans', sans-serif", resize: 'vertical', outline: 'none', marginBottom: '0.75rem' }} />
+        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 0.85rem', lineHeight: 1.5 }}>
+          Forwarding Case <strong style={{ color: '#0f172a' }}>{caseId}</strong> along the statutory NDPS chain of custody.
+        </p>
+
+        {/* Destination Box */}
+        <div style={{ background: '#f8fafc', border: '1.5px solid #0f5ca8', borderRadius: '10px', padding: '0.85rem', marginBottom: '0.85rem' }}>
+          <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#0f5ca8', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>
+            Next Tier Destination
+          </div>
+          <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.2rem' }}>
+            {destInfo.label}
+          </div>
+          <div style={{ fontSize: '0.74rem', color: '#475569' }}>
+            Recipient: <strong>{destInfo.recipient}</strong>
+          </div>
+        </div>
+
+        {/* Handover Note Textarea */}
+        <div style={{ marginBottom: '0.85rem' }}>
+          <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', marginBottom: '0.35rem' }}>
+            Handover Note / Officer Remarks (Transferred with Evidence):
+          </label>
+          <textarea
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            placeholder="e.g. Chemical colorimetric transition confirmed. Physical sealed pouch sent for GC-MS confirmatory analysis."
+            rows={3}
+            style={{ width: '100%', boxSizing: 'border-box', padding: '0.6rem 0.75rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.82rem', fontFamily: "'Noto Sans', sans-serif", resize: 'vertical', outline: 'none' }}
+          />
+        </div>
+
         {err && <p style={{ color: '#dc2626', fontSize: '0.78rem', margin: '0 0 0.6rem' }}>{err}</p>}
+
         <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end' }}>
           <button onClick={onClose}
             style={{ padding: '0.5rem 1.1rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Noto Sans', sans-serif", color: '#475569' }}>
@@ -303,7 +344,7 @@ function EscalateModal({ caseId, role, badge, onClose, onDone }: {
           </button>
           <button onClick={submit} disabled={busy}
             style={{ padding: '0.5rem 1.25rem', borderRadius: '8px', border: 'none', background: busy ? '#94a3b8' : '#0f5ca8', color: '#fff', fontSize: '0.84rem', fontWeight: 800, cursor: busy ? 'not-allowed' : 'pointer', fontFamily: "'Noto Sans', sans-serif", display: 'flex', alignItems: 'center', gap: '0.4rem', boxShadow: busy ? 'none' : '0 2px 8px rgba(15,92,168,0.35)' }}>
-            <SendHorizonal size={14} /> {busy ? 'Sending…' : 'Escalate'}
+            <SendHorizonal size={14} /> {busy ? 'Forwarding…' : 'Confirm Forward'}
           </button>
         </div>
       </div>
@@ -340,6 +381,9 @@ interface VaultCard {
   tamperDetected?: boolean;
   // Escalation
   escalationStatus?: string;
+  escalationNote?: string;
+  escalatedBy?: string;
+  escalatedAt?: string;
 }
 
 function getReagentFallbackImage(reagent: string, substance: string): string {
@@ -408,6 +452,9 @@ function mapSupabaseRow(row: any): VaultCard {
     geminiExpiry: assay?.gemini_expiry,
     tamperDetected: assay?.tamper_detected,
     escalationStatus: row.escalation_status,
+    escalationNote: row.escalation_note,
+    escalatedBy: row.escalated_by,
+    escalatedAt: row.escalated_at,
   };
 }
 
@@ -491,14 +538,34 @@ export default function EvidenceVaultPage({ roleOverride, portalTitle, portalSub
           const card = mapSupabaseRow(row);
           const localMatch = localMap.get(row.case_id) || localMap.get(row.photo_hash) || localMap.get(row.id);
           if (!card.photoUrl && !card.photoDataUrl && localMatch?.photoDataUrl) card.photoDataUrl = localMatch.photoDataUrl;
-          if (!card.escalationStatus && localEsc[row.case_id]) card.escalationStatus = localEsc[row.case_id];
+          const stored = getStoredEscalationInfo(row.case_id);
+          if (stored) {
+            if (!card.escalationStatus) card.escalationStatus = stored.toStatus;
+            if (!card.escalationNote) card.escalationNote = stored.note;
+            if (!card.escalatedBy) card.escalatedBy = stored.by;
+            if (!card.escalatedAt) card.escalatedAt = stored.at;
+          } else if (!card.escalationStatus && localEsc[row.case_id]) {
+            card.escalationStatus = localEsc[row.case_id];
+          }
           return card;
         });
 
         const dbCaseIds = new Set(data.map((r: any) => r.case_id));
         const pendingLocal = localScans
           .filter(s => !dbCaseIds.has(s.caseId) && !dbCaseIds.has(s.id))
-          .map(s => { const c = mapLocalScan(s); if (localEsc[c.caseId]) c.escalationStatus = localEsc[c.caseId]; return c; });
+          .map(s => {
+            const c = mapLocalScan(s);
+            const stored = getStoredEscalationInfo(c.caseId) || getStoredEscalationInfo(c.id);
+            if (stored) {
+              if (!c.escalationStatus) c.escalationStatus = stored.toStatus;
+              if (!c.escalationNote) c.escalationNote = stored.note;
+              if (!c.escalatedBy) c.escalatedBy = stored.by;
+              if (!c.escalatedAt) c.escalatedAt = stored.at;
+            } else if (localEsc[c.caseId]) {
+              c.escalationStatus = localEsc[c.caseId];
+            }
+            return c;
+          });
 
         setCards([...supabaseCards, ...pendingLocal]);
 
@@ -510,7 +577,19 @@ export default function EvidenceVaultPage({ roleOverride, portalTitle, portalSub
       }
     } catch { /* fall through */ }
 
-    const mapped = localScans.map(s => { const c = mapLocalScan(s); if (localEsc[c.caseId]) c.escalationStatus = localEsc[c.caseId]; return c; });
+    const mapped = localScans.map(s => {
+      const c = mapLocalScan(s);
+      const stored = getStoredEscalationInfo(c.caseId) || getStoredEscalationInfo(c.id);
+      if (stored) {
+        if (!c.escalationStatus) c.escalationStatus = stored.toStatus;
+        if (!c.escalationNote) c.escalationNote = stored.note;
+        if (!c.escalatedBy) c.escalatedBy = stored.by;
+        if (!c.escalatedAt) c.escalatedAt = stored.at;
+      } else if (localEsc[c.caseId]) {
+        c.escalationStatus = localEsc[c.caseId];
+      }
+      return c;
+    });
     setCards(mapped);
     setEscStatuses(localEsc);
     setLoading(false);
@@ -534,12 +613,17 @@ export default function EvidenceVaultPage({ roleOverride, portalTitle, portalSub
       console.warn('Error deleting from IndexedDB:', err);
     }
 
-    // Delete from localStorage escalations
+    // Delete from localStorage escalations and notes
     try {
       const localEsc = JSON.parse(localStorage.getItem('ncb_escalations') || '{}');
       delete localEsc[card.caseId];
       delete localEsc[card.id];
       localStorage.setItem('ncb_escalations', JSON.stringify(localEsc));
+
+      const localNotes = JSON.parse(localStorage.getItem('ncb_escalation_notes') || '{}');
+      delete localNotes[card.caseId];
+      delete localNotes[card.id];
+      localStorage.setItem('ncb_escalation_notes', JSON.stringify(localNotes));
     } catch {}
 
     // Delete from Supabase
@@ -735,6 +819,16 @@ export default function EvidenceVaultPage({ roleOverride, portalTitle, portalSub
                     ) : <div style={{ fontSize: '0.67rem', color: '#94a3b8' }}>No AI data</div>}
                   </div>
                 </div>
+
+                {/* ── Handover / Escalation Note Strip (if present) ── */}
+                {card.escalationNote && (
+                  <div style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0', padding: '0.45rem 0.75rem', display: 'flex', alignItems: 'flex-start', gap: '0.4rem' }}>
+                    <SendHorizonal size={12} color="#0f5ca8" style={{ marginTop: '0.12rem', flexShrink: 0 }} />
+                    <div style={{ fontSize: '0.68rem', color: '#334155', lineHeight: 1.4 }}>
+                      <strong style={{ color: '#0f5ca8' }}>Handover Note{card.escalatedBy ? ` (${card.escalatedBy})` : ''}:</strong> {card.escalationNote}
+                    </div>
+                  </div>
+                )}
 
                 {/* ── Action buttons row ── */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.85rem', flexWrap: 'wrap' }}>

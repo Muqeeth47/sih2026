@@ -480,10 +480,10 @@ export default function ScannerPage() {
         }
       }
 
-      // 5. ── BLUR GATE ── block before calling Gemini ──────────────────────
+      // 5. Quality Metrics
       const finalBlur = analyzeBlur(regionImageData);
       const finalGlare = analyzeGlare(regionImageData);
-      if (!finalBlur.isSharp) {
+      if (finalBlur.laplacianVariance < 5) {
         setBlurBlocked({ laplacian: finalBlur.laplacianVariance });
         return;
       }

@@ -25,7 +25,8 @@ export default function ViewfinderOverlay({
 }: ViewfinderOverlayProps) {
   const isSharp = blurResult?.isSharp ?? true;
   const hasGlare = glareResult?.hasGlare ?? false;
-  const canCapture = cameraActive && isSharp && !hasGlare && !isCapturing;
+  // Always allow capture when camera stream is active (do not disable shutter button)
+  const canCapture = cameraActive && !isCapturing;
 
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10 }}>
