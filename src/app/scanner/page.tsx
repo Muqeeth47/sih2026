@@ -328,40 +328,6 @@ function ScanResultPanel({
   );
 }
 
-// ── Blur blocked UI ───────────────────────────────────────────────────────────
-function BlurBlockedPanel({ laplacian, onRetake }: { laplacian: number; onRetake: () => void }) {
-  return (
-    <div style={{
-      background: '#fff', border: '1px solid #fed7aa', borderLeft: '5px solid #f97316',
-      borderRadius: '12px', padding: '1.5rem', textAlign: 'center',
-      fontFamily: "'Noto Sans', sans-serif",
-    }}>
-      <AlertTriangle size={36} color="#f97316" style={{ margin: '0 auto 0.75rem' }} />
-      <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.4rem' }}>
-        Photo Too Blurry — Retake Required
-      </h3>
-      <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0 0 0.25rem', lineHeight: 1.6 }}>
-        Sharpness score: <strong>{laplacian.toFixed(0)}</strong> (minimum 80 required for forensic analysis)
-      </p>
-      <p style={{ fontSize: '0.78rem', color: '#94a3b8', margin: '0 0 1.25rem' }}>
-        Hold the camera steady, ensure good lighting, and focus on the reagent chamber.
-      </p>
-      <button
-        onClick={onRetake}
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-          padding: '0.6rem 1.4rem', borderRadius: '8px',
-          background: '#0f5ca8', color: '#fff', border: 'none',
-          fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
-          fontFamily: "'Noto Sans', sans-serif",
-        }}
-      >
-        <Camera size={16} /> Retake Photo
-      </button>
-    </div>
-  );
-}
-
 // ── Helper to compress image before sending to Gemini API for sub-second analysis ──
 async function compressImageForAI(dataUrl: string, maxDim = 640, quality = 0.75): Promise<string> {
   return new Promise((resolve) => {
@@ -406,7 +372,6 @@ export default function ScannerPage() {
   const [glareResult, setGlareResult]         = useState<GlareResult | null>(null);
   const [isAnalyzing, setIsAnalyzing]         = useState(false);
   const [currentResult, setCurrentResult]     = useState<ScanResult | null>(null);
-  const [blurBlocked, setBlurBlocked]         = useState<{ laplacian: number } | null>(null);
   const [committing, setCommitting]           = useState(false);
   const [committed, setCommitted]             = useState(false);
 
@@ -417,11 +382,11 @@ export default function ScannerPage() {
     return () => { stopCamera(); };
   }, [startCamera, stopCamera]);
 
-  // Real-time blur/glare preview while camera is live
+  // Real-time telemetry preview while camera is live
   useEffect(() => {
     if (!isActive) return;
     const interval = setInterval(() => {
-      if (isAnalyzing || currentResult || blurBlocked) return;
+      if (isAnalyzing || currentResult) return;
       try {
         const frame = captureReticleRegion();
         if (frame) {
@@ -431,7 +396,7 @@ export default function ScannerPage() {
       } catch { /* ignore canvas errors during rapid framing */ }
     }, 450);
     return () => clearInterval(interval);
-  }, [isActive, isAnalyzing, currentResult, blurBlocked, captureReticleRegion]);
+  }, [isActive, isAnalyzing, currentResult, captureReticleRegion]);
 
   const processCapturedImageData = async (
     dataUrl: string,
@@ -439,7 +404,6 @@ export default function ScannerPage() {
     _fullImageData: ImageData
   ) => {
     setIsAnalyzing(true);
-    setBlurBlocked(null);
     setCurrentResult(null);
 
     try {
@@ -480,13 +444,9 @@ export default function ScannerPage() {
         }
       }
 
-      // 5. Quality Metrics
+      // 5. Quality Metrics (telemetry recording only, never blocking capture)
       const finalBlur = analyzeBlur(regionImageData);
       const finalGlare = analyzeGlare(regionImageData);
-      if (finalBlur.laplacianVariance < 5) {
-        setBlurBlocked({ laplacian: finalBlur.laplacianVariance });
-        return;
-      }
 
       // 6. Cloud AI — Gemini (compressed to ~50KB for fast analysis)
       let aiResult: AIAnalysisResult | null = null;
@@ -495,7 +455,12 @@ export default function ScannerPage() {
         const aiResponse = await fetch('/api/drug-review', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageBase64: compressedBase64, reagentType: selectedReagent }),
+          body: JSON.stringify({
+            imageBase64: compressedBase64,
+            reagentType: selectedReagent,
+            isColorPositive,
+            lowestDeltaE,
+          }),
         });
         if (aiResponse.ok) {
           const aiJson = await aiResponse.json();
@@ -511,18 +476,18 @@ export default function ScannerPage() {
       // If AI service is unreachable (e.g. offline field raid), synthesize local forensic AI observation
       if (!aiResult) {
         aiResult = {
-          verdict: 'ACCEPTED',
-          rejectReason: undefined,
-          kitType: 'Field Chemical Test Pouch (NCB Standard)',
+          verdict: isColorPositive ? 'ACCEPTED' : 'REJECTED',
+          rejectReason: isColorPositive ? undefined : 'No drug test pouch or chemical reaction detected in target zone.',
+          kitType: isColorPositive ? 'Field Chemical Test Pouch (NCB Standard)' : undefined,
           observedColor: bestMatch.expectedColorName || 'Color transition noted',
           substanceClass: isColorPositive ? bestMatch.substanceClass : 'Negative',
           tamperDetected: false,
-          pouchLotNumber: `NCB-${selectedReagent.toUpperCase().slice(0, 3)}-2026`,
-          pouchExpiry: '2028-12-31',
+          pouchLotNumber: isColorPositive ? `NCB-${selectedReagent.toUpperCase().slice(0, 3)}-2026` : undefined,
+          pouchExpiry: isColorPositive ? '2028-12-31' : undefined,
           courtSummary: isColorPositive
             ? `Field colorimetric reaction exhibiting characteristic transition for ${bestMatch.substanceClass} under Section 52 NDPS Act.`
-            : 'No characteristic color change in reagent chamber. Field indication negative under NDPS Act.',
-          substance: bestMatch.substanceClass,
+            : 'Image rejected — No valid chemical reaction detected in reagent chamber. Field indication negative under NDPS Act.',
+          substance: isColorPositive ? bestMatch.substanceClass : 'Negative',
           confidence: isColorPositive ? 0.91 : 0.0,
         };
       }
@@ -722,7 +687,6 @@ export default function ScannerPage() {
 
   const handleReset = () => {
     setCurrentResult(null);
-    setBlurBlocked(null);
     setCommitted(false);
     startCamera('environment');
   };
@@ -762,9 +726,7 @@ export default function ScannerPage() {
         </div>
 
         {/* Main stage */}
-        {blurBlocked ? (
-          <BlurBlockedPanel laplacian={blurBlocked.laplacian} onRetake={handleReset} />
-        ) : currentResult ? (
+        {currentResult ? (
           <ScanResultPanel
             result={currentResult}
             onReset={handleReset}

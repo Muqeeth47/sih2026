@@ -114,11 +114,11 @@ export function useCameraStream() {
     const w = imageData.width;
     const h = imageData.height;
 
-    // Center 40% region
-    const rx = Math.round(w * 0.3);
-    const ry = Math.round(h * 0.3);
-    const rw = Math.round(w * 0.4);
-    const rh = Math.round(h * 0.4);
+    // Generous center region matching enlarged reticle box (~75% width, ~65% height)
+    const rw = Math.round(w * 0.75);
+    const rh = Math.round(h * 0.65);
+    const rx = Math.round((w - rw) / 2);
+    const ry = Math.round((h - rh) / 2.1);
 
     const regionCanvas = document.createElement('canvas');
     regionCanvas.width = rw;

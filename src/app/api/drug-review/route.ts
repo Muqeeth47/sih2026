@@ -4,7 +4,7 @@ import type { AIAnalysisResult } from '@/types/drug';
 export const maxDuration = 60;
 
 // ── Gemini models to try in order (fastest first) ─────────────────────────────
-const MODELS_TO_TRY = [
+const DEFAULT_MODELS = [
   'gemini-2.0-flash',
   'gemini-1.5-flash',
   'gemini-1.5-flash-8b',
@@ -38,11 +38,11 @@ NOTES: ${criteria.notes}
 
 ═══ STEP 1 — IMAGE VALIDATION (check FIRST) ═══
 REJECT the image immediately if ANY of these are true:
+  • No drug test pouch or kit is visible in the image
+  • The image is of an unrelated object, human hand, skin, road, person, background, wall
   • The image is blurry or out-of-focus (reagent chamber unreadable)
   • Severe specular glare obscures the fluid colour
-  • No drug test pouch / kit is visible in the image
   • The reagent fluid chamber is hidden, empty, or not reacted yet
-  • The image is of an unrelated object (road, person, etc.)
 
 ═══ STEP 2 — IF ACCEPTED, OBSERVE ONLY ═══
 Report strictly what you can SEE in the image:
@@ -61,7 +61,7 @@ DO NOT invent, guess, or extrapolate:
 Return ONLY a valid JSON object conforming to this exact structure:
 {
   "verdict": "ACCEPTED" or "REJECTED",
-  "rejectReason": "string or null — reason if REJECTED, e.g. Blurry image / No test kit visible",
+  "rejectReason": "string or null — reason if REJECTED, e.g. No drug test pouch visible in image / Hand or unrelated object detected",
   "kitType": "string or null — kit brand/type if legible on label",
   "observedColor": "string — qualitative colour description of the fluid",
   "substanceClass": "string — qualitative match e.g. Opiates/Alkaloids, Cocaine derivative, or Negative",
@@ -73,21 +73,30 @@ Return ONLY a valid JSON object conforming to this exact structure:
 Note: Ensure courtSummary is strictly 40 words or fewer.`.trim();
 }
 
-function generateHeuristicForensicFallback(reagentType: string, imageBase64: string): AIAnalysisResult {
+function generateHeuristicForensicFallback(
+  reagentType: string,
+  imageBase64: string,
+  isColorPositive?: boolean,
+  lowestDeltaE?: number
+): AIAnalysisResult {
   const criteria = REAGENT_CRITERIA[reagentType.toLowerCase()] || REAGENT_CRITERIA.marquis;
   const isTooSmall = !imageBase64 || imageBase64.length < 500;
 
-  if (isTooSmall) {
+  // If color was not positive, or color difference to reagent reference is high (> 16.0), or image is too small:
+  // It is an unrelated object (e.g. skin/hand, background, paper) -> REJECT
+  const isNegativeOrUnrelated = isTooSmall || isColorPositive === false || (typeof lowestDeltaE === 'number' && lowestDeltaE > 16.0);
+
+  if (isNegativeOrUnrelated) {
     return {
       verdict: 'REJECTED',
-      rejectReason: 'Incomplete or unreadable image frame received.',
-      kitType: 'Field Chemical Test Pouch',
-      observedColor: 'Indeterminate',
+      rejectReason: 'No drug test pouch or chemical reaction visible in the image (unrelated subject / hand detected).',
+      kitType: undefined,
+      observedColor: 'Non-reagent surface (Skin / Unrelated background)',
       substanceClass: 'Negative',
       tamperDetected: false,
       pouchLotNumber: undefined,
       pouchExpiry: undefined,
-      courtSummary: 'Image rejected — Incomplete frame. Officer directed to retake photo of reacted test kit.',
+      courtSummary: 'Image rejected — No drug test pouch visible. Officer directed to retake photo of reacted test kit.',
       substance: 'Negative',
       confidence: 0.0,
     };
@@ -114,7 +123,7 @@ function generateHeuristicForensicFallback(reagentType: string, imageBase64: str
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { imageBase64, reagentType } = body;
+    const { imageBase64, reagentType, isColorPositive, lowestDeltaE } = body;
 
     if (!imageBase64) {
       return NextResponse.json({ success: false, error: 'No image data received.' }, { status: 400 });
@@ -122,22 +131,27 @@ export async function POST(req: NextRequest) {
 
     const rawKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
     const apiKey = rawKey.trim().replace(/^["']|["']$/g, '');
+    const configuredModel = process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL.trim()] : [];
+    const modelsToTry = Array.from(new Set([...configuredModel, ...DEFAULT_MODELS]));
 
-    // If key is present and looks like a real Google AI API key, attempt Gemini API calls
-    if (apiKey && apiKey.startsWith('AIzaSy')) {
+    // If key is present, attempt real Gemini Vision API call
+    if (apiKey) {
       const promptText = buildGeminiPrompt(reagentType || 'marquis');
       const mimeMatch = imageBase64.match(/^data:(image\/[a-zA-Z0-9.+_-]+);base64,/);
       const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
       const base64Data = imageBase64.replace(/^data:image\/[a-zA-Z0-9.+_-]+;base64,/, '');
 
-      for (const model of MODELS_TO_TRY) {
+      for (const model of modelsToTry) {
         try {
           const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
             {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              signal: AbortSignal.timeout(10000), // 10s realistic timeout for mobile networks
+              headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey,
+              },
+              signal: AbortSignal.timeout(10000), // 10s realistic timeout
               body: JSON.stringify({
                 contents: [
                   {
@@ -206,8 +220,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Seamless on-device heuristic fallback (guarantees offline/demo resilience without UI failure)
-    const fallbackAnalysis = generateHeuristicForensicFallback(reagentType || 'marquis', imageBase64);
+    // Heuristic analysis: Rejects non-pouch/hand images & accepts real reagent colorimetric reactions
+    const fallbackAnalysis = generateHeuristicForensicFallback(reagentType || 'marquis', imageBase64, isColorPositive, lowestDeltaE);
     return NextResponse.json({
       success: true,
       analysis: fallbackAnalysis,
@@ -216,7 +230,7 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error('[drug-review] Route error:', error);
-    const fallbackAnalysis = generateHeuristicForensicFallback('marquis', '');
+    const fallbackAnalysis = generateHeuristicForensicFallback('marquis', '', false, 99);
     return NextResponse.json({ success: true, analysis: fallbackAnalysis, source: 'safety-fallback' });
   }
 }

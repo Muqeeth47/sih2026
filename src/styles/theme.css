@@ -192,13 +192,13 @@
 .pill-red    { background: var(--ncb-crimson-subtle); color: var(--ncb-crimson); border: 1px solid #fecaca; }
 .pill-amber  { background: var(--ncb-amber-subtle);  color: var(--ncb-amber); border: 1px solid #fed7aa; }
 
-/* ─── Viewfinder Reticle ─────────────────────────────────────── */
+/* ─── Viewfinder Reticle (Large & Mobile Optimized) ──────────── */
 .viewfinder-reticle {
   position: absolute;
-  top: 50%;
+  top: 48%;
   left: 50%;
-  width: 40%;
-  aspect-ratio: 1.618;
+  width: min(84%, 480px);
+  aspect-ratio: 1.18;
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
@@ -206,30 +206,30 @@
 .viewfinder-reticle::after {
   content: '';
   position: absolute;
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   border-color: #0284c7;
   border-style: solid;
 }
 .viewfinder-reticle::before {
   top: 0; left: 0;
-  border-width: 3px 0 0 3px;
+  border-width: 3.5px 0 0 3.5px;
 }
 .viewfinder-reticle::after {
   bottom: 0; right: 0;
-  border-width: 0 3px 3px 0;
+  border-width: 0 3.5px 3.5px 0;
 }
 .reticle-corner-tr {
   position: absolute; top: 0; right: 0;
-  width: 20px; height: 20px;
-  border-top: 3px solid #0284c7;
-  border-right: 3px solid #0284c7;
+  width: 28px; height: 28px;
+  border-top: 3.5px solid #0284c7;
+  border-right: 3.5px solid #0284c7;
 }
 .reticle-corner-bl {
   position: absolute; bottom: 0; left: 0;
-  width: 20px; height: 20px;
-  border-bottom: 3px solid #0284c7;
-  border-left: 3px solid #0284c7;
+  width: 28px; height: 28px;
+  border-bottom: 3.5px solid #0284c7;
+  border-left: 3.5px solid #0284c7;
 }
 
 /* ─── NCB Emblem Badge (Light Themed) ────────────────────────── */

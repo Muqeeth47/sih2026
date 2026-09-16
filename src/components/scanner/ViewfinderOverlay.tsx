@@ -81,11 +81,11 @@ export default function ViewfinderOverlay({
         </button>
       </div>
 
-      {/* Viewfinder Target Reticle (Center 40%) */}
+      {/* Viewfinder Target Reticle (Large Pouch Framing Zone) */}
       <div
         className="viewfinder-reticle"
         style={{
-          border: `2px dashed ${!isSharp ? 'var(--ncb-crimson)' : hasGlare ? 'var(--ncb-gold)' : 'var(--ncb-saffron)'}`,
+          border: '2.5px dashed rgba(2, 132, 199, 0.85)',
           boxShadow: '0 0 0 9999px rgba(10, 25, 47, 0.55)',
           borderRadius: 'var(--radius-lg)',
           transition: 'border-color 0.2s ease',
@@ -101,65 +101,44 @@ export default function ViewfinderOverlay({
             position: 'absolute',
             top: '50%',
             left: '50%',
-            width: '16px',
-            height: '16px',
+            width: '20px',
+            height: '20px',
             transform: 'translate(-50%, -50%)',
             pointerEvents: 'none',
           }}
         >
-          <div style={{ position: 'absolute', top: '7px', left: 0, width: '16px', height: '2px', background: 'rgba(255,255,255,0.7)' }} />
-          <div style={{ position: 'absolute', top: 0, left: '7px', width: '2px', height: '16px', background: 'rgba(255,255,255,0.7)' }} />
+          <div style={{ position: 'absolute', top: '9px', left: 0, width: '20px', height: '2px', background: 'rgba(255,255,255,0.75)' }} />
+          <div style={{ position: 'absolute', top: 0, left: '9px', width: '2px', height: '20px', background: 'rgba(255,255,255,0.75)' }} />
         </div>
 
-        {/* Real-time Reticle Telemetry Overlay */}
+        {/* Alignment Guide Pill */}
         <div
           style={{
             position: 'absolute',
-            bottom: '-2.5rem',
+            bottom: '-2.2rem',
             left: 0,
             right: 0,
             textAlign: 'center',
             pointerEvents: 'auto',
           }}
         >
-          {blurResult && (
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                background: isSharp ? 'rgba(19, 136, 8, 0.85)' : 'rgba(220, 38, 38, 0.85)',
-                color: 'white',
-                padding: '0.2rem 0.6rem',
-                borderRadius: 'var(--radius-full)',
-                fontSize: '0.7rem',
-                fontWeight: 600,
-              }}
-            >
-              {isSharp ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
-              {blurResult.message} ({Math.round(blurResult.laplacianVariance)})
-            </div>
-          )}
-
-          {hasGlare && glareResult && (
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                background: 'rgba(245, 158, 11, 0.9)',
-                color: 'var(--ncb-navy-dark)',
-                padding: '0.2rem 0.6rem',
-                borderRadius: 'var(--radius-full)',
-                fontSize: '0.7rem',
-                fontWeight: 700,
-                marginLeft: '0.4rem',
-              }}
-            >
-              <SunMedium size={12} />
-              {glareResult.message}
-            </div>
-          )}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              background: 'rgba(10, 25, 47, 0.85)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              padding: '0.22rem 0.75rem',
+              borderRadius: 'var(--radius-full)',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+            }}
+          >
+            <CheckCircle2 size={12} color="#0284c7" />
+            Align test kit inside box
+          </div>
         </div>
       </div>
 
