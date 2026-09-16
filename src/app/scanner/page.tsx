@@ -33,12 +33,14 @@ function ScanResultPanel({
   result,
   onReset,
   onCommit,
+  onUploadNew,
   committing,
   committed,
 }: {
   result: ScanResult;
   onReset: () => void;
   onCommit: () => void;
+  onUploadNew?: () => void;
   committing: boolean;
   committed: boolean;
 }) {
@@ -285,6 +287,21 @@ function ScanResultPanel({
           <FileText size={15} color="#0f5ca8" /> Download Certified PDF
         </button>
 
+        {onUploadNew && (
+          <button
+            onClick={onUploadNew}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              padding: '0.6rem 1rem', borderRadius: '8px',
+              border: '1px solid #bfdbfe', background: '#eff6ff',
+              fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer',
+              fontFamily: "'Noto Sans', sans-serif", color: '#0f5ca8',
+            }}
+          >
+            <Upload size={14} color="#0f5ca8" /> Upload Another Image
+          </button>
+        )}
+
         {committed ? (
           <div style={{ flex: 1, background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px', padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <CheckCircle2 size={16} color="#16a34a" />
@@ -302,7 +319,7 @@ function ScanResultPanel({
                 fontFamily: "'Noto Sans', sans-serif", color: '#475569',
               }}
             >
-              <RotateCcw size={14} /> Retake
+              <RotateCcw size={14} /> Scan New Photo
             </button>
             <button
               onClick={onCommit}
@@ -539,6 +556,7 @@ export default function ScannerPage() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    e.target.value = '';
     const reader = new FileReader();
     reader.onload = (event) => {
       const rawDataUrl = event.target?.result as string;
@@ -727,12 +745,16 @@ export default function ScannerPage() {
           </div>
         </div>
 
+        {/* Hidden persistent file input for both fresh scans and consecutive re-uploads */}
+        <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} />
+
         {/* Main stage */}
         {currentResult ? (
           <ScanResultPanel
             result={currentResult}
             onReset={handleReset}
             onCommit={handleCommitVault}
+            onUploadNew={() => fileInputRef.current?.click()}
             committing={committing}
             committed={committed}
           />
@@ -779,7 +801,6 @@ export default function ScannerPage() {
               )}
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} />
               <button onClick={() => fileInputRef.current?.click()} style={{ background: 'transparent', border: 'none', color: 'var(--ncb-navy-primary)', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer' }}>
                 <Upload size={14} /> Testing without camera? Upload test pouch image
               </button>

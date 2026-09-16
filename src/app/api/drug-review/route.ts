@@ -77,22 +77,26 @@ function generateHeuristicForensicFallback(
   reagentType: string,
   imageBase64: string,
   isColorPositive?: boolean,
-  _lowestDeltaE?: number
+  lowestDeltaE?: number
 ): AIAnalysisResult {
   const criteria = REAGENT_CRITERIA[reagentType.toLowerCase()] || REAGENT_CRITERIA.marquis;
   const isTooSmall = !imageBase64 || imageBase64.length < 300;
 
-  if (isTooSmall) {
+  // If Delta E is greater than 18.0, the color does NOT match any calibrated forensic chemical reaction or clear pouch
+  // (e.g. purple shirt, hand, wall, clothing) -> REJECT immediately
+  const isUnrelatedObject = isTooSmall || (typeof lowestDeltaE === 'number' && lowestDeltaE > 18.0);
+
+  if (isUnrelatedObject) {
     return {
       verdict: 'REJECTED',
-      rejectReason: 'Incomplete or unreadable image frame received.',
+      rejectReason: 'No authentic drug test pouch or chemical reaction detected in frame (unrelated subject / clothing detected).',
       kitType: undefined,
-      observedColor: 'Indeterminate',
+      observedColor: 'Non-reagent surface (Clothing / Background / Skin)',
       substanceClass: 'Negative',
       tamperDetected: false,
       pouchLotNumber: undefined,
       pouchExpiry: undefined,
-      courtSummary: 'Image rejected — Incomplete frame. Officer directed to retake photo of reacted test kit.',
+      courtSummary: 'Image rejected — No drug test pouch visible. Officer directed to retake photo of reacted test kit.',
       substance: 'Negative',
       confidence: 0.0,
     };
@@ -117,7 +121,7 @@ function generateHeuristicForensicFallback(
     };
   }
 
-  // Valid negative test result
+  // Valid negative test result on an authentic unreacted pouch
   return {
     verdict: 'ACCEPTED',
     rejectReason: undefined,
