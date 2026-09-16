@@ -77,7 +77,9 @@ function generateHeuristicForensicFallback(
   reagentType: string,
   imageBase64: string,
   isColorPositive?: boolean,
-  lowestDeltaE?: number
+  lowestDeltaE?: number,
+  matchedSubstance?: string,
+  expectedColor?: string
 ): AIAnalysisResult {
   const criteria = REAGENT_CRITERIA[reagentType.toLowerCase()] || REAGENT_CRITERIA.marquis;
   const isTooSmall = !imageBase64 || imageBase64.length < 300;
@@ -102,8 +104,8 @@ function generateHeuristicForensicFallback(
     };
   }
 
-  const primaryDrug = criteria.targetDrug.split('/')[0].trim();
-  const expColor = criteria.expectedColor.split(';')[0].split('for')[0].trim();
+  const primaryDrug = matchedSubstance || criteria.targetDrug.split('/')[0].trim();
+  const expColor = expectedColor || criteria.expectedColor.split(';')[0].split('for')[0].trim();
 
   if (isColorPositive) {
     return {
@@ -131,7 +133,7 @@ function generateHeuristicForensicFallback(
     tamperDetected: false,
     pouchLotNumber: `NCB-${reagentType.toUpperCase().slice(0, 3)}-2026`,
     pouchExpiry: '2028-12-31',
-    courtSummary: `Chemical colorimetric assay shows no characteristic color reaction. Presumptive indication is negative for ${primaryDrug} under Section 52 NDPS Act.`,
+    courtSummary: `Chemical colorimetric assay shows no characteristic color reaction. Presumptive indication is negative under Section 52 NDPS Act.`,
     substance: 'Negative',
     confidence: 0.90,
   };
@@ -140,7 +142,7 @@ function generateHeuristicForensicFallback(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { imageBase64, reagentType, isColorPositive, lowestDeltaE } = body;
+    const { imageBase64, reagentType, isColorPositive, lowestDeltaE, matchedSubstance, expectedColor } = body;
 
     if (!imageBase64) {
       return NextResponse.json({ success: false, error: 'No image data received.' }, { status: 400 });
@@ -238,7 +240,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Heuristic analysis: Rejects non-pouch/hand images & accepts real reagent colorimetric reactions
-    const fallbackAnalysis = generateHeuristicForensicFallback(reagentType || 'marquis', imageBase64, isColorPositive, lowestDeltaE);
+    const fallbackAnalysis = generateHeuristicForensicFallback(
+      reagentType || 'marquis',
+      imageBase64,
+      isColorPositive,
+      lowestDeltaE,
+      matchedSubstance,
+      expectedColor
+    );
     return NextResponse.json({
       success: true,
       analysis: fallbackAnalysis,

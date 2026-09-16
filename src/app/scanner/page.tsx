@@ -477,6 +477,8 @@ export default function ScannerPage() {
             reagentType: selectedReagent,
             isColorPositive,
             lowestDeltaE,
+            matchedSubstance: bestMatch.substanceClass,
+            expectedColor: bestMatch.expectedColorName,
           }),
         });
         if (aiResponse.ok) {
