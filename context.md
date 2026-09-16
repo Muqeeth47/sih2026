@@ -49,26 +49,76 @@ The system enforces strict operational clearance boundaries. Features strictly b
 
 ---
 
+---
+
 ## 🔬 4. Core Mathematical & Forensic Pipelines
 
-### A. CIELAB $\Delta E_{2000}$ Spectrophotometry (`src/utils/colorMath.ts`)
+### A. Two-Tier Independent Verification Architecture (OpenCV + Gemini)
+
+The system enforces strict operational independence between on-device deterministic mathematics and multimodal computer vision:
+
+```
+                  ┌────────────────────────────────────────────────────────┐
+                  │                 RAW CAMERA / UPLOAD IMAGE              │
+                  └───────────┬────────────────────────────────┬───────────┘
+                              │                                │
+                              ▼                                ▼
+            ┌──────────────────────────────────┐  ┌──────────────────────────────────┐
+            │       STEP 1: ON-DEVICE OPENCV   │  │       STEP 2: GEMINI VISION      │
+            │   (Deterministic Colorimetry)    │  │   (Physical & Packaging Forensic)│
+            ├──────────────────────────────────┤  ├──────────────────────────────────┤
+            │ • CIELAB ΔE₂₀₀₀ color distance   │  │ • Pouch presence verification    │
+            │ • Chemical Fluid Chroma Cluster  │  │ • Pouch tear / puncture detection│
+            │ • Skin-Locus Biometric Filter    │  │ • Tamper / seal integrity        │
+            │ • Sharpness (Laplacian variance) │  │ • Batch/Lot number OCR (label)   │
+            │ • Glare % calculation            │  │ • Drafts Section 52 NDPS Legal   │
+            │ • 100% Offline (<5ms execution)  │  │   Court Evidentiary Statement    │
+            └─────────────────┬────────────────┘  └─────────────────┬────────────────┘
+                              │                                     │
+                              └───────────────┬─────────────────────┘
+                                              ▼
+                              ┌──────────────────────────────────┐
+                              │     TAMPER-PROOF CONSENSUS       │
+                              │ • If ΔE > 15.0 or Face/Skin:     │
+                              │   ➔ REJECT IMMEDIATELY           │
+                              │ • If Positive AND Pouch intact:  │
+                              │   ➔ ACCEPT + SHA-256 VAULT SEAL  │
+                              └──────────────────────────────────┘
+```
+
+---
+
+### B. CIELAB $\Delta E_{2000}$ Spectrophotometry (`src/utils/colorMath.ts`)
 - **Pipeline**: Captured RGB $\rightarrow$ Linear sRGB $\rightarrow$ CIE XYZ ($D_{65}$ Standard Illuminant) $\rightarrow$ CIELAB ($L^*, a^*, b^*$).
 - **Color Distance Calculation**: Standard **CIEDE2000 ($\Delta E_{2000}$)** formula incorporating lightness ($S_L$), chroma ($S_C$), hue ($S_H$), and rotation term ($R_T$) to match human perceptual non-uniformity.
+- **Chemical Fluid Chroma Clustering (`extractColorReading`)**:
+  - Automatically isolates the reacted chemical fluid from the surrounding white plastic packaging, glare, and background.
+  - Computes chromatic saturation ($C^* = \sqrt{(a^*)^2 + (b^*)^2}$) across all viewport pixels and filters low-chroma white/clear plastic to cluster the true reacted dye.
+- **Biometric Skin-Locus Filter (`isSkinOrHumanSubject`)**:
+  - Distinguishes human skin, selfies, portraits, and hands ($L^* \in [30, 88], a^* \in [6, 28], b^* \in [9, 36], R > G > B$) from synthetic chemical reagents.
+  - Automatically intercepts and rejects portraits and hand photos with clear retake guidance.
 - **Performance**: Completes in **$< 5\text{ms}$** on standard mobile processors with zero web service calls.
 
-### B. Optical Quality Guardians
-- **Laplacian Edge Sharpness (`src/utils/blurDetector.ts`)**: Applies a discrete $3 \times 3$ Laplacian kernel across the grayscale image to calculate variance. If variance $< 90$, the capture shutter locks and flags a "Hold Steady" warning.
-- **Specular Glare Filter (`src/utils/glareFilter.ts`)**: Identifies blown-out white plastic packet reflections ($L^* > 95$, saturation $< 5\%$). If glare exceeds $8\%$ of the reticle surface, it advises tilting the pouch.
+---
 
-### C. Reagent Spectrum Matrix (`src/utils/reagentMatrix.ts`)
-Includes official UNODC ST/NAR/13 reference indices for:
-1. **Marquis Reagent**: Heroin / Morphine (Purple $\rightarrow$ Black), Methamphetamine (Orange $\rightarrow$ Brown).
+### C. Multimodal AI Forensic Validation (`src/app/api/drug-review/route.ts`)
+- **Cloud Engine**: Google Gemini Multimodal Vision API.
+- **Independent 2-Question Framework**:
+  1. *Pouch Authenticity*: Validates whether the image contains a real chemical test pouch (rejects hands, clothing, walls, and faces).
+  2. *Physical & Packaging Inspection*: Checks for torn seals, syringe puncture tampering, fluid leaks, reads printed Lot/Expiry OCR, and drafts a statutory Section 52 NDPS court statement.
+- **Resilient Offline Fallback Engine**: If cloud API is unreachable, synthesizes local forensic observations using calibrated colorimetric metrics and biometric filters without crashing.
+
+---
+
+### D. Reagent Spectrum Matrix (`src/utils/reagentMatrix.ts`)
+Includes official UNODC ST/NAR/13 reference indices with multi-substance candidate harmonization:
+1. **Marquis Reagent**: Heroin / Morphine (Purple $\rightarrow$ Black), Methamphetamine (Orange $\rightarrow$ Brown), MDMA/Ecstasy (Deep Violet).
 2. **Scott Reagent**: Cocaine HCl (Cobalt Blue Precipitate).
 3. **Duquenois-Levine**: Cannabis / Hashish (Deep Violet in Chloroform Layer).
-4. **Mecke Reagent**: MDMA / Ecstasy (Blue-Green $\rightarrow$ Black).
-5. **Mandelin Reagent**: Ketamine (Bright Deep Orange).
-6. **Froehde Reagent**: Opium Alkaloids (Slate Blue).
-7. **Nitric Acid**: Codeine / Opium distinction.
+4. **Mecke Reagent**: MDMA / Heroin (Blue-Green $\rightarrow$ Black).
+5. **Mandelin Reagent**: Ketamine (Deep Olive Green), Amphetamines (Black).
+6. **Froehde Reagent**: Opium Alkaloids / Heroin (Purple).
+7. **Ehrlich Reagent**: LSD / Indoles (Purple / Indigo).
 
 ---
 

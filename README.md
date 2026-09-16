@@ -12,8 +12,13 @@
 ## 🎯 What is SAKSHYA AI (साक्ष्य AI)?
 **SAKSHYA AI (साक्ष्य AI)** (*सत्यमेव साक्ष्यम् — Truth is the Sole Evidence*) is a field forensics companion built for narcotics interdictions under **Section 43 & 52 of the NDPS Act, 1985** and **Section 65B of the Bharatiya Sakshya Adhiniyam (BSA), 2023**. It turns any standard smartphone camera into a calibrated chemical spot-test reader:
 
-1. **Step 1 — Rapid Color Match (On-Device):** Measures reagent liquid color shift using perceptual color distance math ($\text{CIELAB } \Delta E_{2000}$) in under 5ms, 100% offline.
-2. **Step 2 — AI Visual Verification (Cloud):** Uses Google Gemini 1.5 Flash to inspect test kit labels, check batch lot/expiry, detect packaging tamper, and draft statutory court statements under Section 52 NDPS Act.
+1. **Step 1 — Rapid Color Match (On-Device OpenCV Colorimetry):**
+   - Extracts chemical reaction color using **Chroma Clustering** ($C^* = \sqrt{a^2 + b^2}$) to isolate fluid dyes from white plastic packaging and background reflections.
+   - Measures perceptual color distance using **CIELAB $\Delta E_{2000}$** in under 5ms, 100% offline.
+   - Rejects living human tissue, selfies, portraits, and hands via an integrated **Skin-Locus Biometric Discriminator**.
+2. **Step 2 — AI Visual Verification (Cloud Gemini Vision):**
+   - Independent multimodal computer vision that verifies test kit presence, detects puncture/tear package tampering, performs OCR on batch lot/expiry numbers, and drafts statutory Section 52 NDPS court statements.
+   - If cloud is unreachable, falls back seamlessly to an on-device safety engine.
 3. **Cryptographic Chain of Custody:** Generates an immutable SHA-256 photo hash and records GPS coordinates at the moment of interdiction.
 4. **1-Click Certified Panchnama & PDF:** Instant generation of Section 52 NDPS Form 'F' seizure memoranda and court-ready assay certificates with embedded photos.
 
