@@ -61,6 +61,7 @@ function ReportDetailModal({ card, role, onClose }: { card: VaultCard; role: NCB
         substanceClass: card.matchedSubstance, substance: card.matchedSubstance,
         confidence: 0.9, tamperDetected: card.tamperDetected ?? false,
         pouchLotNumber: card.geminiLot, pouchExpiry: card.geminiExpiry,
+        imageSummary: card.geminiImageSummary,
         courtSummary: card.geminiCourtSummary || '',
       } : null,
       syncPending: card.syncPending, caseId: card.caseId,
@@ -244,6 +245,15 @@ function ReportDetailModal({ card, role, onClose }: { card: VaultCard; role: NCB
               </div>
             )}
 
+            {card.geminiImageSummary && (
+              <div style={{ background: '#f8fafc', padding: '0.6rem 0.75rem', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '0.72rem', color: '#1e293b', lineHeight: 1.5, marginBottom: '0.5rem' }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#0f5ca8', textTransform: 'uppercase', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <Eye size={12} /> Visual Image Summary
+                </div>
+                <div>{card.geminiImageSummary}</div>
+              </div>
+            )}
+
             <div style={{ background: '#f8fafc', padding: '0.6rem 0.75rem', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '0.72rem', color: '#334155', lineHeight: 1.5, marginBottom: '0.5rem' }}>
               <strong>Court Summary:</strong> {card.geminiCourtSummary || 'Immediate spectral transition matching official UNODC reference standard. Conforms to Section 52 NDPS Act documentation standards.'}
             </div>
@@ -375,6 +385,7 @@ interface VaultCard {
   geminiVerdict?: string;
   geminiRejectReason?: string;
   geminiObservedColor?: string;
+  geminiImageSummary?: string;
   geminiCourtSummary?: string;
   geminiLot?: string;
   geminiExpiry?: string;
@@ -479,6 +490,7 @@ function mapLocalScan(scan: ScanResult): VaultCard {
     geminiVerdict: scan.aiAnalysis?.verdict,
     geminiRejectReason: scan.aiAnalysis?.rejectReason,
     geminiObservedColor: scan.aiAnalysis?.observedColor,
+    geminiImageSummary: scan.aiAnalysis?.imageSummary,
     geminiCourtSummary: scan.aiAnalysis?.courtSummary,
     geminiLot: scan.aiAnalysis?.pouchLotNumber,
     geminiExpiry: scan.aiAnalysis?.pouchExpiry,

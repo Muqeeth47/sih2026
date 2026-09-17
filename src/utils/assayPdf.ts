@@ -232,6 +232,21 @@ export async function generateAssayPDF(result: ScanResult): Promise<void> {
 
     y = (doc as any).lastAutoTable.finalY + 4;
 
+    if (ai.imageSummary) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(15, 92, 168); // NCB Blue
+      doc.text('Physical Image Visual Summary:', margin, y);
+      y += 3.2;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.2);
+      doc.setTextColor(51, 65, 85);
+      const imgSummaryLines = doc.splitTextToSize(ai.imageSummary, contentW);
+      doc.text(imgSummaryLines, margin, y);
+      y += imgSummaryLines.length * 3.5 + 3.5;
+    }
+
     if (ai.courtSummary) {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(7.5);

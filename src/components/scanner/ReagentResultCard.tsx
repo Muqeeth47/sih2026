@@ -225,6 +225,19 @@ export default function ReagentResultCard({ result, onReset, onSaveToVault }: Re
 
             {result.aiAnalysis ? (
               <div className="space-y-3">
+                {/* Visual Image Summary */}
+                {result.aiAnalysis.imageSummary && (
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                    <div className="flex items-center gap-1.5 mb-1 text-[0.68rem] font-extrabold text-blue-700 uppercase tracking-wider">
+                      <Eye size={13} />
+                      <span>Physical Image Visual Summary</span>
+                    </div>
+                    <p className="text-xs text-slate-800 font-medium leading-relaxed mb-0">
+                      {result.aiAnalysis.imageSummary}
+                    </p>
+                  </div>
+                )}
+
                 {/* Court Summary Quote Box */}
                 <div className={`border rounded-xl p-3.5 ${
                   result.aiAnalysis.verdict === 'REJECTED'

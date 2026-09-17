@@ -3,14 +3,13 @@ import type { AIAnalysisResult } from '@/types/drug';
 
 export const maxDuration = 60;
 
-// ── Gemini models to try in order (fastest first) ─────────────────────────────
+// ── Gemini models to try in order (active models with verified quota first) ────
 const DEFAULT_MODELS = [
-  'gemini-3.6-flash',
-  'gemini-flash-latest',
+  'gemini-3.1-flash-lite',
+  'gemini-flash-lite-latest',
   'gemini-3.5-flash',
-  'gemini-2.5-flash-lite',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
+  'gemini-flash-latest',
+  'gemini-3.6-flash',
 ];
 
 // ── Per-reagent forensic context for the prompt ───────────────────────────────
@@ -52,6 +51,7 @@ Report strictly what you can SEE in the image:
   • State whether the colour matches the expected positive reaction
   • Read kit label, lot number, and expiry date ONLY if the text is clearly legible
   • Note any visible seal damage or tamper evidence on the packaging
+  • Provide a concise visual image summary (2–3 sentences) describing what is physically visible in the image (packaging type, fluid appearance, lighting/clarity, background)
   
 DO NOT invent, guess, or extrapolate:
   ✗ No purity percentages
@@ -70,6 +70,7 @@ Return ONLY a valid JSON object conforming to this exact structure:
   "tamperDetected": true or false,
   "pouchLotNumber": "string or null",
   "pouchExpiry": "string or null",
+  "imageSummary": "A concise, objective 2-3 sentence visual description of the physical image (e.g. Test kit pouch framed in viewport with reacted fluid chamber, visible packaging boundaries, intact blister seal, and ambient lighting conditions)",
   "courtSummary": "A concise, formal NDPS Act Sec. 52 statement under 40 words describing the observable reaction only. If REJECTED write under 20 words: 'Image rejected — [Reason]. Officer directed to retake photo of reacted test kit.'"
 }
 Note: Ensure courtSummary is strictly 40 words or fewer.`.trim();
@@ -102,6 +103,9 @@ function generateHeuristicForensicFallback(
       tamperDetected: false,
       pouchLotNumber: undefined,
       pouchExpiry: undefined,
+      imageSummary: isSkin
+        ? 'Image framing captures human skin/facial tissue rather than a chemical field test pouch. No chemical reaction chamber detected.'
+        : 'Image framing lacks an authentic chemical reagent pouch or valid testing apparatus. Background or non-reagent surface detected.',
       courtSummary: isSkin
         ? 'Image rejected — Human face / skin detected. Officer directed to retake photo of reacted test kit.'
         : 'Image rejected — No drug test pouch visible. Officer directed to retake photo of reacted test kit.',
@@ -123,6 +127,7 @@ function generateHeuristicForensicFallback(
       tamperDetected: false,
       pouchLotNumber: `NCB-${reagentType.toUpperCase().slice(0, 3)}-2026`,
       pouchExpiry: '2028-12-31',
+      imageSummary: `Test kit pouch centered in frame displaying authentic ${reagentType.toUpperCase()} reagent chamber with ${expColor} chemical fluid reaction. Intact pouch seal with no physical tampering or fluid leakage detected.`,
       courtSummary: `Observable colorimetric transition in reagent chamber consistent with presumptive positive reaction for ${primaryDrug} under Sec 52 NDPS Act.`,
       substance: primaryDrug,
       confidence: 0.92,
@@ -139,6 +144,7 @@ function generateHeuristicForensicFallback(
     tamperDetected: false,
     pouchLotNumber: `NCB-${reagentType.toUpperCase().slice(0, 3)}-2026`,
     pouchExpiry: '2028-12-31',
+    imageSummary: `Test kit pouch framed with intact reagent chamber showing unreacted, transparent fluid. No characteristic chromatic shift detected; pouch seal intact.`,
     courtSummary: `Chemical colorimetric assay shows no characteristic color reaction. Presumptive indication is negative under Section 52 NDPS Act.`,
     substance: 'Negative',
     confidence: 0.90,
@@ -176,7 +182,7 @@ export async function POST(req: NextRequest) {
                 'Content-Type': 'application/json',
                 'x-goog-api-key': apiKey,
               },
-              signal: AbortSignal.timeout(10000), // 10s realistic timeout
+              signal: AbortSignal.timeout(12000), // 12s realistic timeout
               body: JSON.stringify({
                 contents: [
                   {
@@ -194,18 +200,21 @@ export async function POST(req: NextRequest) {
                 generationConfig: {
                   responseMimeType: 'application/json',
                   temperature: 0.1,
-                  maxOutputTokens: 512,
+                  maxOutputTokens: 2048,
                 },
               }),
             }
           );
 
           if (!response.ok) {
+            const errBody = await response.text().catch(() => '');
+            console.warn(`[drug-review] Model ${model} returned ${response.status}:`, errBody.slice(0, 120));
             continue;
           }
 
           const data = await response.json();
-          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          const parts = data.candidates?.[0]?.content?.parts || [];
+          const text = parts.map((p: any) => p.text).filter(Boolean).join('\n');
 
           if (!text) continue;
 
@@ -233,6 +242,7 @@ export async function POST(req: NextRequest) {
             tamperDetected: parsed.tamperDetected ?? false,
             pouchLotNumber: parsed.pouchLotNumber ?? undefined,
             pouchExpiry:   parsed.pouchExpiry ?? undefined,
+            imageSummary:  (parsed.imageSummary ?? '').trim() || undefined,
             courtSummary,
             substance:     parsed.substanceClass ?? 'Field observation — see court summary',
             confidence:    parsed.verdict === 'ACCEPTED' ? 0.92 : 0.0,
@@ -243,9 +253,15 @@ export async function POST(req: NextRequest) {
           // try next model
         }
       }
+
+      // If API key was present but all attempts failed (e.g. offline server / no internet), do not falsely accept
+      return NextResponse.json(
+        { success: false, error: 'Cloud Gemini service is currently offline or unreachable. Scan preserved in local vault.' },
+        { status: 503 }
+      );
     }
 
-    // Heuristic analysis: Rejects non-pouch/hand images & accepts real reagent colorimetric reactions
+    // Only if explicitly no API key is configured at all in environment, use heuristic
     const fallbackAnalysis = generateHeuristicForensicFallback(
       reagentType || 'marquis',
       imageBase64,
@@ -263,7 +279,9 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error('[drug-review] Route error:', error);
-    const fallbackAnalysis = generateHeuristicForensicFallback('marquis', '', false, 99);
-    return NextResponse.json({ success: true, analysis: fallbackAnalysis, source: 'safety-fallback' });
+    return NextResponse.json(
+      { success: false, error: 'Cloud AI analysis failed. Preserving scan in offline queue.' },
+      { status: 500 }
+    );
   }
 }

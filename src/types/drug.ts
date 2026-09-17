@@ -112,7 +112,7 @@ export interface GPSCoordinate {
 
 export interface AIAnalysisResult {
   /** Qualitative verdict from Gemini image validation */
-  verdict?: 'ACCEPTED' | 'REJECTED';
+  verdict?: 'ACCEPTED' | 'REJECTED' | 'OFFLINE_QUEUED';
   /** Why Gemini rejected the image (blurry, no kit, glare, etc.) */
   rejectReason?: string;
   /** Qualitative colour description observed by Gemini */
@@ -129,6 +129,8 @@ export interface AIAnalysisResult {
   tamperDetected: boolean;
   pouchLotNumber?: string;
   pouchExpiry?: string;
+  /** Objective visual description of the physical image contents (packaging, fluid, lighting, setting) */
+  imageSummary?: string;
   courtSummary: string;
   reason?: string;
   batchId?: string;

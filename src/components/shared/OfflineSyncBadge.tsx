@@ -9,20 +9,34 @@ export default function OfflineSyncBadge({ compact = false }: { compact?: boolea
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
 
     const refresh = async () => {
-      try { setPendingCount(await getPendingCount()); } catch { /* ignore */ }
+      try {
+        const count = await getPendingCount();
+        setPendingCount(count);
+      } catch { /* ignore */ }
     };
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      refresh();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      refresh();
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('ncb-sync-updated', refresh);
+
     refresh();
-    const interval = setInterval(refresh, 8000);
+    const interval = setInterval(refresh, 5000);
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('ncb-sync-updated', refresh);
       clearInterval(interval);
     };
   }, []);

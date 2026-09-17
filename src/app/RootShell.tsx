@@ -10,6 +10,7 @@ import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import Footer from '@/components/layout/Footer';
 import OfflineSyncBadge from '@/components/shared/OfflineSyncBadge';
 import SplashScreen from '@/components/shared/SplashScreen';
+import { registerAutoSync, syncOfflineScansToCloud } from '@/utils/offlineQueue';
 
 const PUBLIC_PATHS = ['/', '/login', '/about', '/terms', '/privacy', '/architecture', '/how-to-use'];
 
@@ -17,6 +18,12 @@ export default function RootShell({ children }: { children: React.ReactNode }) {
   const [showSplash, setShowSplash] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Global offline-to-cloud automatic background sync
+  useEffect(() => {
+    const unregister = registerAutoSync(syncOfflineScansToCloud);
+    return () => unregister();
+  }, []);
 
   // Safely trigger splash on client mount once hydration completes without SSR mismatch
   useEffect(() => {
