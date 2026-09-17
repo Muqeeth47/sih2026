@@ -37,13 +37,16 @@ EXPECTED POSITIVE COLOUR: ${criteria.expectedColor}
 NOTES: ${criteria.notes}
 
 ═══ STEP 1 — IMAGE VALIDATION (check FIRST) ═══
-REJECT the image immediately if ANY of these are true:
-  • No drug test pouch or kit is visible in the image
-  • The image contains a human face, portrait, selfie, skin, hand, person, body part
-  • The image is of an unrelated object, clothing, road, vehicle, background, desk, wall
-  • The image is blurry or out-of-focus (reagent chamber unreadable)
-  • Severe specular glare obscures the fluid colour
-  • The reagent fluid chamber is hidden, empty, or not reacted yet
+REJECT the image ONLY if:
+  • No drug test pouch, kit, test cassette, strip, ampoule, or reagent chamber is visible in the frame (e.g. pure selfie, human face, portrait, clothing, car, wall, or desk with NO drug test kit).
+  • The reagent fluid chamber is completely hidden, empty, or unreacted.
+  • The photo is so severely out-of-focus or glare-blinded that the fluid colour cannot be discerned.
+
+CRITICAL INSTRUCTION REGARDING HANDS & FIELD INTERDICTIONS:
+  ✓ In field drug interdictions, officers and lab analysts routinely HOLD, PINCH, OR SUPPORT the test pouch / kit / vial with their fingers, hands, or gloved hands.
+  ✓ DO NOT reject images simply because a human hand, fingers, or gloves are holding or visible next to the test pouch!
+  ✓ As long as a genuine drug test pouch or chemical test kit is visible and can be analyzed, you MUST ACCEPT the image (verdict: "ACCEPTED").
+  ✓ Only REJECT if the image contains SOLELY a hand, skin, face, or portrait with NO drug test kit present.
 
 ═══ STEP 2 — IF ACCEPTED, OBSERVE ONLY ═══
 Report strictly what you can SEE in the image:
@@ -51,7 +54,7 @@ Report strictly what you can SEE in the image:
   • State whether the colour matches the expected positive reaction
   • Read kit label, lot number, and expiry date ONLY if the text is clearly legible
   • Note any visible seal damage or tamper evidence on the packaging
-  • Provide a concise visual image summary (2–3 sentences) describing what is physically visible in the image (packaging type, fluid appearance, lighting/clarity, background)
+  • Provide a concise visual image summary (2–3 sentences) describing what is physically visible in the image (packaging type, fluid appearance, lighting/clarity, background, hands holding kit if present)
   
 DO NOT invent, guess, or extrapolate:
   ✗ No purity percentages
@@ -63,14 +66,14 @@ DO NOT invent, guess, or extrapolate:
 Return ONLY a valid JSON object conforming to this exact structure:
 {
   "verdict": "ACCEPTED" or "REJECTED",
-  "rejectReason": "string or null — reason if REJECTED, e.g. No drug test pouch visible in image / Hand or unrelated object detected",
+  "rejectReason": "string or null — reason ONLY if REJECTED (e.g. No drug test pouch visible in image / Pure portrait or unrelated background detected)",
   "kitType": "string or null — kit brand/type if legible on label",
   "observedColor": "string — qualitative colour description of the fluid",
   "substanceClass": "string — qualitative match e.g. Opiates/Alkaloids, Cocaine derivative, or Negative",
   "tamperDetected": true or false,
   "pouchLotNumber": "string or null",
   "pouchExpiry": "string or null",
-  "imageSummary": "A concise, objective 2-3 sentence visual description of the physical image (e.g. Test kit pouch framed in viewport with reacted fluid chamber, visible packaging boundaries, intact blister seal, and ambient lighting conditions)",
+  "imageSummary": "A concise, objective 2-3 sentence visual description of the physical image (e.g. Test kit pouch held in hand framed in viewport with reacted fluid chamber, visible packaging boundaries, intact blister seal, and ambient lighting conditions)",
   "courtSummary": "A concise, formal NDPS Act Sec. 52 statement under 40 words describing the observable reaction only. If REJECTED write under 20 words: 'Image rejected — [Reason]. Officer directed to retake photo of reacted test kit.'"
 }
 Note: Ensure courtSummary is strictly 40 words or fewer.`.trim();
@@ -88,27 +91,21 @@ function generateHeuristicForensicFallback(
   const criteria = REAGENT_CRITERIA[reagentType.toLowerCase()] || REAGENT_CRITERIA.marquis;
   const isTooSmall = !imageBase64 || imageBase64.length < 300;
 
-  // If skin detected or Delta E > 15.0, reject immediately
-  const isUnrelatedObject = isTooSmall || Boolean(isSkin) || (typeof lowestDeltaE === 'number' && lowestDeltaE > 15.0);
+  // Only reject if image payload is empty or extreme color discrepancy without positive reaction
+  const isUnrelatedObject = isTooSmall || (typeof lowestDeltaE === 'number' && lowestDeltaE > 22.0 && !isColorPositive);
 
   if (isUnrelatedObject) {
     return {
       verdict: 'REJECTED',
-      rejectReason: isSkin
-        ? 'No authentic chemical drug test pouch detected (human face / skin / portrait framed).'
-        : 'No authentic drug test pouch or chemical reaction detected in frame (unrelated subject / clothing detected).',
+      rejectReason: 'No authentic drug test pouch or chemical reaction detected in frame (unrelated subject / clothing detected).',
       kitType: undefined,
-      observedColor: isSkin ? 'Human Face / Skin Surface' : 'Non-reagent surface (Clothing / Background / Skin)',
+      observedColor: 'Non-reagent surface (Clothing / Background)',
       substanceClass: 'Negative',
       tamperDetected: false,
       pouchLotNumber: undefined,
       pouchExpiry: undefined,
-      imageSummary: isSkin
-        ? 'Image framing captures human skin/facial tissue rather than a chemical field test pouch. No chemical reaction chamber detected.'
-        : 'Image framing lacks an authentic chemical reagent pouch or valid testing apparatus. Background or non-reagent surface detected.',
-      courtSummary: isSkin
-        ? 'Image rejected — Human face / skin detected. Officer directed to retake photo of reacted test kit.'
-        : 'Image rejected — No drug test pouch visible. Officer directed to retake photo of reacted test kit.',
+      imageSummary: 'Image framing lacks an authentic chemical reagent pouch or valid testing apparatus. Background or non-reagent surface detected.',
+      courtSummary: 'Image rejected — No drug test pouch visible. Officer directed to retake photo of reacted test kit.',
       substance: 'Negative',
       confidence: 0.0,
     };

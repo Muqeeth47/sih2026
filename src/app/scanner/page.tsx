@@ -675,24 +675,18 @@ export default function ScannerPage() {
 
       // If AI service is unreachable (e.g. offline field raid), synthesize local forensic AI observation
       if (!aiResult) {
-        if (isSkin || lowestDeltaE > 16.0) {
+        if (lowestDeltaE > 22.0 && !isColorPositive) {
           aiResult = {
             verdict: 'REJECTED',
-            rejectReason: isSkin
-              ? 'No authentic chemical drug test pouch detected (human face / skin / portrait framed).'
-              : 'No drug test pouch or characteristic chemical reaction visible in the frame.',
+            rejectReason: 'No authentic drug test pouch or characteristic chemical reaction detected in the frame.',
             kitType: undefined,
-            observedColor: isSkin ? 'Human Face / Skin Surface' : 'Non-reagent background',
+            observedColor: 'Non-reagent background',
             substanceClass: 'Negative',
             tamperDetected: false,
             pouchLotNumber: undefined,
             pouchExpiry: undefined,
-            imageSummary: isSkin
-              ? 'Visual frame captured human facial/skin tissue rather than a chemical field test pouch. No chemical reaction chamber detected.'
-              : 'Visual frame lacks an identifiable chemical reagent pouch or valid testing apparatus.',
-            courtSummary: isSkin
-              ? 'Image rejected — Human face / skin detected. Officer directed to retake photo of reacted test kit.'
-              : 'Image rejected — No drug test pouch visible. Officer directed to retake photo of reacted test kit.',
+            imageSummary: 'Visual frame lacks an identifiable chemical reagent pouch or valid testing apparatus.',
+            courtSummary: 'Image rejected — No drug test pouch visible. Officer directed to retake photo of reacted test kit.',
             substance: 'Negative',
             confidence: 0.0,
           };
@@ -716,22 +710,6 @@ export default function ScannerPage() {
             confidence: isColorPositive ? 0.90 : 0.1,
           };
         }
-      } else if (isSkin && aiResult.verdict === 'ACCEPTED') {
-        // Fallback safeguard if cloud AI erroneously accepted a human face
-        aiResult = {
-          verdict: 'REJECTED',
-          rejectReason: 'No authentic chemical drug test pouch detected (human face / skin / portrait framed).',
-          kitType: undefined,
-          observedColor: 'Human Face / Skin Surface',
-          substanceClass: 'Negative',
-          tamperDetected: false,
-          pouchLotNumber: undefined,
-          pouchExpiry: undefined,
-          imageSummary: 'Visual frame contains human skin/face surface. Chemical reagent chamber not detected.',
-          courtSummary: 'Image rejected — Human face / skin detected. Officer directed to retake photo of reacted test kit.',
-          substance: 'Negative',
-          confidence: 0.0,
-        };
       }
 
       // 7. Harmonize OpenCV & Gemini Verdicts
