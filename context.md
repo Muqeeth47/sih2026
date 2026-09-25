@@ -1,6 +1,7 @@
 # 🏛️ SAKSHYA AI (साक्ष्य AI) — Complete Project Context & Architecture
 ## 🧪 Project: Digital Companion for Field Drug Testing
 ### 📋 Problem Statement: **SIH 26231** | **Ministry of Home Affairs / Narcotics Control Bureau (NCB)**
+### 🏷️ Team ID: **173635** | Team Name: **Sudophiles** | Theme: **MedTech / BioTech / HealthTech**
 ### 🌐 Live Production URL: `https://sih2026-rust.vercel.app`
 
 ---
@@ -16,7 +17,7 @@ SAKSHYA AI transforms any standard smartphone camera into an objective, tamper-p
 1. **On-Device Instant Color Match**: 100% offline mathematical color reading and lighting normalization.
 2. **Quality & Biometric Safeguards**: Filters out blurry frames, glare, and automatically rejects photos of human faces/skin or random objects.
 3. **Cryptographic Proof**: Captures high-accuracy GPS coordinates, operator badge ID, timestamp, and generates an on-device **SHA-256 cryptographic seal** of the image.
-4. **Cloud AI Verification (Gemini)**: Verifies test pouch authenticity, checks package seals for tampering, reads batch numbers, and drafts statutory statements.
+4. **Cloud AI Verification**: Verifies test pouch authenticity, checks package seals for tampering, reads batch numbers, and drafts statutory statements.
 5. **Section 52 NDPS / Form 'F' & Panchnama Export**: Instant 1-click generation of court-admissible PDF seizure memos and electronic evidence certificates.
 
 ---
@@ -36,14 +37,14 @@ SAKSHYA AI transforms any standard smartphone camera into an objective, tamper-p
 
 ### Excalidraw Diagram (0:00 – 0:30):
 ```
-Team: [Your Team Name]  |  PS ID: 26231 (NCB / MHA)
+Team: Sudophiles (ID: 173635)  |  PS ID: 26231 (NCB / MHA)
 "Sakshya AI — Digital Companion for Field Drug Testing"
 
 Field Officer ──(Photo + GPS)──> Forensic Lab ──(Lab Test)──> Zonal HQ ──(Live Map)──> Court
 ```
 
 ### Video Flow & Screen Sitemap:
-1. **0:00 - 0:30 | Excalidraw**: Introduce team, state Problem Statement #26231, and explain why visual color tests fail in court.
+1. **0:00 - 0:30 | Excalidraw**: Introduce team (Sudophiles - 173635), state Problem Statement #26231, and explain why visual color tests fail in court.
 2. **0:31 - 1:30 | Field Officer ([`/scanner`](https://sih2026-rust.vercel.app/scanner))**:
    - Demonstrate on-device offline color match + SHA-256 hash.
    - Show AI packaging & batch check.
@@ -69,5 +70,5 @@ Field Officer ──(Photo + GPS)──> Forensic Lab ──(Lab Test)──> Zo
 - **Local Offline Engine**: IndexedDB (`ncb_drugseal_db`)
 - **Interactive Maps**: Leaflet & React-Leaflet with OpenStreetMap tiles (`src/components/analytics/SeizureMap.tsx`)
 - **PDF Generation**: `jspdf` & `jspdf-autotable` (`src/utils/assayPdf.ts`, `src/utils/panchnamaPdf.ts`)
-- **AI Multimodal Vision**: Google Gemini API via `/api/drug-review` with prioritized automatic failover:
+- **AI Multimodal Vision**: Google Gemini API via `/api/drug-review` with automated failover:
   `gemini-3.1-flash-lite` $\rightarrow$ `gemini-flash-lite-latest` $\rightarrow$ `gemini-3.5-flash` $\rightarrow$ `gemini-3.6-flash`.
