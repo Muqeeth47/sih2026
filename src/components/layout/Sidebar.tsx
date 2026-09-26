@@ -1,13 +1,14 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Camera, FileText, ShieldCheck, MapPin, Scale, Settings,
-  ChevronLeft, ChevronRight, HelpCircle, LayoutDashboard, Map, User
+  ChevronLeft, ChevronRight, HelpCircle, LayoutDashboard, Map, User,
+  LogOut, ArrowLeftRight, CheckCircle2, Building2, FlaskConical, Shield
 } from 'lucide-react';
-import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, ROLE_HOME_ROUTES } from '@/hooks/useAuth';
+import { DEMO_ROLES, type NCBRole } from '@/data/mockData';
 
 const NAV_ITEMS: {
   icon: React.ElementType; label: string; href: string; roles: readonly string[];
@@ -35,14 +36,33 @@ const NAV_ITEMS: {
   { icon: Map,             label: 'Architecture',      href: '/architecture',      roles: ['ncb_io', 'ncb_fsl', 'ncb_zonal', 'ncb_court'] },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  onItemClick?: () => void;
+}
+
+export default function Sidebar({ onItemClick }: SidebarProps) {
   const pathname = usePathname();
-  const { user, loginAsRole } = useAuth();
+  const router = useRouter();
+  const { user, loginAsRole, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [showRoleSwitcher, setShowRoleSwitcher] = useState(false);
 
   const visibleItems = NAV_ITEMS.filter(item =>
     user && (item.roles as readonly string[]).includes(user.role)
   );
+
+  const handleSwitchRole = (role: NCBRole) => {
+    loginAsRole(role);
+    const destination = ROLE_HOME_ROUTES[role] || '/overview';
+    router.push(destination);
+    onItemClick?.();
+  };
+
+  const handleSignOut = () => {
+    logout();
+    router.push('/login');
+    onItemClick?.();
+  };
 
   return (
     <aside
@@ -62,7 +82,7 @@ export default function Sidebar() {
       }}
       aria-label="Main navigation"
     >
-      {/* Collapse toggle */}
+      {/* Collapse toggle (Desktop only) */}
       <button
         onClick={() => setCollapsed(c => !c)}
         style={{
@@ -94,6 +114,7 @@ export default function Sidebar() {
               key={item.href}
               href={item.href}
               title={collapsed ? item.label : undefined}
+              onClick={() => onItemClick?.()}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -109,6 +130,7 @@ export default function Sidebar() {
                 transition: 'all 0.15s',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
+                minHeight: '38px',
               }}
               onMouseEnter={e => {
                 if (!isActive) (e.currentTarget as HTMLElement).style.background = '#f1f5f9';
@@ -133,21 +155,177 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Officer info at bottom */}
-      {!collapsed && user && (
+      {/* Bottom Profile & Role Switcher Area */}
+      {!collapsed && user ? (
         <div style={{
-          padding: '0.85rem 1rem',
           borderTop: '1px solid #e2e8f0',
           background: '#f8fafc',
+          padding: '0.75rem 0.85rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.6rem',
         }}>
-          <div style={{ fontSize: '0.68rem', color: '#64748b', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
-            Logged In As
+          {/* Officer Info Card */}
+          <div style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '8px',
+            padding: '0.6rem 0.75rem',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
+              <span style={{ fontSize: '0.65rem', color: '#0f5ca8', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 800 }}>
+                ● Active Officer
+              </span>
+              <span style={{ fontSize: '0.65rem', color: '#64748b', fontFamily: 'monospace', fontWeight: 700 }}>
+                {user.badge}
+              </span>
+            </div>
+            <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {user.name}
+            </div>
+            <div style={{ fontSize: '0.68rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {user.unit}
+            </div>
           </div>
-          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a' }}>{user.name}</div>
-          <div style={{ fontSize: '0.7rem', color: '#0f5ca8', fontFamily: 'monospace', fontWeight: 600 }}>{user.badge}</div>
-          <div style={{ fontSize: '0.66rem', color: '#64748b', marginTop: '0.15rem' }}>{user.unit}</div>
+
+          {/* Role Switcher Section */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowRoleSwitcher(s => !s)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.45rem 0.6rem',
+                background: '#eef2f6',
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                color: '#1e293b',
+                fontSize: '0.74rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <ArrowLeftRight size={13} color="#0f5ca8" />
+                <span>Switch Role / Account</span>
+              </span>
+              <span style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 800 }}>
+                {showRoleSwitcher ? '▲ Close' : '▼ Switch'}
+              </span>
+            </button>
+
+            {showRoleSwitcher && (
+              <div style={{
+                marginTop: '0.4rem',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '0.35rem',
+                background: '#ffffff',
+                border: '1px solid #cbd5e1',
+                borderRadius: '8px',
+                padding: '0.4rem',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.06)',
+              }}>
+                {DEMO_ROLES.map((role) => {
+                  const isCurrent = user.role === role.role;
+                  return (
+                    <button
+                      key={role.role}
+                      type="button"
+                      onClick={() => handleSwitchRole(role.role)}
+                      style={{
+                        padding: '0.45rem 0.35rem',
+                        borderRadius: '5px',
+                        border: isCurrent ? `1.5px solid ${role.color}` : '1px solid #e2e8f0',
+                        background: isCurrent ? '#f0fdf4' : '#ffffff',
+                        color: isCurrent ? '#166534' : '#334155',
+                        fontSize: '0.68rem',
+                        fontWeight: isCurrent ? 800 : 600,
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '0.15rem',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+                        {role.label}
+                      </span>
+                      {isCurrent && (
+                        <span style={{ fontSize: '0.58rem', color: '#15803d', fontWeight: 800 }}>
+                          Active
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Sign Out Button */}
+          <button
+            type="button"
+            onClick={handleSignOut}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.45rem',
+              padding: '0.55rem 0.75rem',
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#dc2626',
+              borderRadius: '7px',
+              fontWeight: 700,
+              fontSize: '0.78rem',
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.background = '#fee2e2';
+              (e.currentTarget as HTMLElement).style.borderColor = '#fca5a5';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.background = '#fef2f2';
+              (e.currentTarget as HTMLElement).style.borderColor = '#fecaca';
+            }}
+          >
+            <LogOut size={14} />
+            <span>Sign Out</span>
+          </button>
         </div>
-      )}
+      ) : collapsed ? (
+        /* Collapsed Sign Out Button */
+        <div style={{ padding: '0.5rem', borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            title="Sign Out"
+            style={{
+              width: '100%',
+              padding: '0.6rem 0',
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#dc2626',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <LogOut size={16} />
+          </button>
+        </div>
+      ) : null}
     </aside>
   );
 }

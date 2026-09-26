@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Shield, Wifi, WifiOff, LogOut, Menu, X, FlaskConical, Building2, Scale } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import OfflineSyncBadge from '@/components/shared/OfflineSyncBadge';
@@ -12,6 +13,7 @@ interface HeaderProps {
 
 export default function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
   const { user, isAuthenticated, logout } = useAuth();
+  const pathname = usePathname();
   const [isOnline, setIsOnline] = useState(true);
   const [mounted, setMounted] = useState(false);
 
@@ -28,12 +30,14 @@ export default function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
     };
   }, []);
 
+  const isLandingOrLogin = pathname === '/' || pathname === '/login';
+
   return (
     <header
       className="sticky top-0 z-50 h-14 sm:h-16 bg-white border-b border-slate-200 flex items-center px-2.5 sm:px-5 gap-1.5 sm:gap-3 shadow-xs"
     >
-      {/* Hamburger Toggle (3 horizontal lines) */}
-      {mounted && isAuthenticated && (
+      {/* Hamburger Toggle (3 horizontal lines) - only on operational workspace pages */}
+      {mounted && isAuthenticated && !isLandingOrLogin && (
         <button
           onClick={onMenuToggle}
           style={{

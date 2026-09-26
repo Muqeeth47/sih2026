@@ -9,15 +9,17 @@ import { useAuth, ROLE_HOME_ROUTES } from '@/hooks/useAuth';
 import { DEMO_ROLES, type NCBRole } from '@/data/mockData';
 
 export default function LoginPage() {
-  const { login, signUp, loginAsRole } = useAuth();
+  const { login, signUp, loginAsRole, signInWithGoogle } = useAuth();
   const router = useRouter();
 
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [activeRoleTab, setActiveRoleTab] = useState<NCBRole>('ncb_io');
-  const [badge, setBadge] = useState('NCB-IO-4092');
-  const [pin, setPin] = useState('7731');
+  const [badge, setBadge] = useState('Sub Inspector');
+  const [pin, setPin] = useState('1234');
   const [showPin, setShowPin] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [autofillNotice, setAutofillNotice] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -36,9 +38,23 @@ export default function LoginPage() {
     if (demo && authMode === 'signin') {
       setBadge(demo.badge);
       setPin(demo.pin);
+      setAutofillNotice(`✨ Autofilled credentials for ${demo.label}: ${demo.badge} (PIN: ${demo.pin})`);
+      setTimeout(() => setAutofillNotice(null), 3500);
     }
     setError('');
     setSuccessMsg('');
+  };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    setError('');
+    const result = await signInWithGoogle(activeRoleTab);
+    setGoogleLoading(false);
+    if (result.success) {
+      router.push(ROLE_HOME_ROUTES[activeRoleTab] || '/overview');
+    } else {
+      setError(result.error || 'Failed to sign in with Google.');
+    }
   };
 
   const handleSignInSubmit = async (e: React.FormEvent) => {
@@ -253,15 +269,43 @@ export default function LoginPage() {
               </button>
             </div>
 
-            {/* Segmented Role Selector Tabs (All 4 Official Roles) */}
+            {/* Autofill Callout Banner */}
+            {authMode === 'signin' && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  background: '#f0fdf4',
+                  border: '1.5px solid #86efac',
+                  borderRadius: '10px',
+                  padding: '0.45rem 0.85rem',
+                  marginBottom: '0.65rem',
+                  fontSize: '0.76rem',
+                  color: '#166534',
+                  fontWeight: 700,
+                  boxShadow: '0 2px 6px rgba(22, 101, 52, 0.06)',
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: '#16a34a' }} className="animate-ping" />
+                  👉 <strong>Click any role below to AUTOFILL credentials</strong>
+                </span>
+                <span style={{ fontSize: '0.66rem', color: '#15803d', background: '#dcfce7', padding: '2px 7px', borderRadius: '5px', fontWeight: 800 }}>
+                  1-Tap Demo
+                </span>
+              </div>
+            )}
+
+            {/* Segmented Role Selector Tabs (All 4 Official Roles with PIN indicators) */}
             <div
-              className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 bg-slate-100 rounded-xl mb-6"
+              className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1.5 bg-slate-100 rounded-xl mb-3"
             >
               {[
-                { role: 'ncb_io' as NCBRole, label: 'Field IO', icon: User },
-                { role: 'ncb_fsl' as NCBRole, label: 'Forensic Lab', icon: FlaskConical },
-                { role: 'ncb_zonal' as NCBRole, label: 'Zonal HQ', icon: Building2 },
-                { role: 'ncb_court' as NCBRole, label: 'NDPS Court', icon: Scale },
+                { role: 'ncb_io' as NCBRole, label: 'Sub Inspector', icon: User, pin: '1234' },
+                { role: 'ncb_fsl' as NCBRole, label: 'Forensic Lab', icon: FlaskConical, pin: '1234' },
+                { role: 'ncb_zonal' as NCBRole, label: 'Zonal Officer', icon: Building2, pin: '1234' },
+                { role: 'ncb_court' as NCBRole, label: 'Court', icon: Scale, pin: '1234' },
               ].map(tab => {
                 const Icon = tab.icon;
                 const isSelected = activeRoleTab === tab.role;
@@ -272,28 +316,61 @@ export default function LoginPage() {
                     onClick={() => handleRoleTabSelect(tab.role)}
                     style={{
                       display: 'flex',
+                      flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '0.35rem',
-                      padding: '0.65rem 0.4rem',
+                      gap: '0.2rem',
+                      padding: '0.6rem 0.35rem',
                       borderRadius: '8px',
                       background: isSelected ? '#ffffff' : 'transparent',
                       color: isSelected ? '#0f172a' : '#64748b',
-                      border: isSelected ? '1px solid #e2e8f0' : '1px solid transparent',
-                      boxShadow: isSelected ? '0 2px 4px rgba(0,0,0,0.04)' : 'none',
-                      fontWeight: isSelected ? 700 : 500,
-                      fontSize: '0.76rem',
+                      border: isSelected ? '1.5px solid #0f5ca8' : '1.5px solid transparent',
+                      boxShadow: isSelected ? '0 2px 8px rgba(15, 92, 168, 0.12)' : 'none',
+                      fontWeight: isSelected ? 800 : 600,
+                      fontSize: '0.78rem',
                       cursor: 'pointer',
                       transition: 'all 0.15s',
-                      whiteSpace: 'nowrap',
                     }}
                   >
-                    <Icon size={14} color={isSelected ? '#0f5ca8' : '#64748b'} />
-                    <span>{tab.label}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <Icon size={14} color={isSelected ? '#0f5ca8' : '#64748b'} />
+                      <span>{tab.label}</span>
+                    </div>
+                    <span style={{
+                      fontSize: '0.62rem',
+                      fontWeight: 700,
+                      color: isSelected ? '#0f5ca8' : '#64748b',
+                      background: isSelected ? '#e0f2fe' : '#e2e8f0',
+                      padding: '1px 5px',
+                      borderRadius: '4px',
+                    }}>
+                      PIN: {tab.pin}
+                    </span>
                   </button>
                 );
               })}
             </div>
+
+            {/* Live Autofill Confirmation Flash */}
+            {autofillNotice && (
+              <div
+                style={{
+                  background: '#eff6ff',
+                  border: '1px solid #bfdbfe',
+                  color: '#1e40af',
+                  padding: '0.45rem 0.75rem',
+                  borderRadius: '8px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                <span>{autofillNotice}</span>
+              </div>
+            )}
 
             {/* Form Section Header */}
             <div style={{ marginBottom: '1.25rem' }}>
@@ -330,14 +407,14 @@ export default function LoginPage() {
                     htmlFor="badge-input"
                     style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.4rem' }}
                   >
-                    Badge Number or Official Email <span style={{ color: '#dc2626' }}>*</span>
+                    Officer Role or Official Email <span style={{ color: '#dc2626' }}>*</span>
                   </label>
                   <input
                     id="badge-input"
                     type="text"
                     value={badge}
                     onChange={(e) => setBadge(e.target.value)}
-                    placeholder="e.g. NCB-IO-4092 or officer@ncb.gov.in"
+                    placeholder="e.g. Sub Inspector, Forensic Lab, or email"
                     required
                     style={{
                       width: '100%',
@@ -348,7 +425,7 @@ export default function LoginPage() {
                       color: '#0f172a',
                       outline: 'none',
                       boxSizing: 'border-box',
-                      fontFamily: 'monospace',
+                      fontFamily: 'inherit',
                       background: '#ffffff',
                       transition: 'border-color 0.15s',
                     }}
@@ -371,7 +448,7 @@ export default function LoginPage() {
                       type={showPin ? 'text' : 'password'}
                       value={pin}
                       onChange={(e) => setPin(e.target.value)}
-                      placeholder="Enter your passcode or password"
+                      placeholder="Enter password (e.g. 1234)"
                       required
                       style={{
                         width: '100%',
@@ -414,7 +491,7 @@ export default function LoginPage() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.25rem' }}>
                   <button
                     type="button"
-                    onClick={() => alert('Demo credentials:\n• Field IO: NCB-IO-4092 / PIN: 7731\n• Forensic Lab: NCB-FSL-1088 / PIN: 9044\n• Zonal HQ: NCB-HQ-0012 / PIN: 1100\n• NDPS Court: NCB-CRT-005 / PIN: 4432\n\nOr create your own account using the Create Account tab.')}
+                    onClick={() => alert('Demo Credentials (PIN: 1234 for all):\n• Sub Inspector (PIN: 1234)\n• Forensic Lab (PIN: 1234)\n• Zonal Officer (PIN: 1234)\n• Court (PIN: 1234)\n\nTip: You can also click the role buttons above to 1-tap autofill.')}
                     style={{ background: 'none', border: 'none', color: '#0f5ca8', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', padding: 0 }}
                   >
                     Forgot password / view credentials
@@ -471,6 +548,49 @@ export default function LoginPage() {
                       <ArrowRight size={17} />
                     </>
                   )}
+                </button>
+
+                {/* Divider */}
+                <div style={{ display: 'flex', alignItems: 'center', margin: '1.15rem 0', gap: '0.75rem' }}>
+                  <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
+                  <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    OR
+                  </span>
+                  <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
+                </div>
+
+                {/* Google Sign In Button */}
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  disabled={googleLoading}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    background: '#ffffff',
+                    border: '1.5px solid #cbd5e1',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    color: '#1e293b',
+                    cursor: googleLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.65rem',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#94a3b8'; e.currentTarget.style.background = '#f8fafc'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#ffffff'; }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                  </svg>
+                  <span>{googleLoading ? 'Connecting to Google…' : 'Sign in with Google'}</span>
                 </button>
               </form>
             ) : (

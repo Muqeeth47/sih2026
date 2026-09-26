@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   Camera, FlaskConical, FileCheck, Shield, Wifi, ShieldCheck, Zap,
-  CheckCircle2, ArrowRight, User, Building2, Scale, ChevronRight, Layers, Award, FileText
+  CheckCircle2, ArrowRight, User, Building2, Scale, ChevronRight, Layers, Award, FileText,
+  Play, ExternalLink, QrCode
 } from 'lucide-react';
 
 const KPI_STATS = [
@@ -79,8 +80,8 @@ const SIM_REAGENTS: SimReagent[] = [
 
 const ROLES_SHOWCASE = [
   {
-    role: 'Investigating Officer (Field IO)',
-    badge: 'NCB-IO-4092',
+    role: 'Sub Inspector',
+    badge: 'PIN: 1234',
     icon: User,
     color: '#0f5ca8',
     desc: 'Conducts highway vehicle searches, live colorimetric camera assays, and instantaneous Form F Panchnama drafting.',
@@ -91,8 +92,8 @@ const ROLES_SHOWCASE = [
     ],
   },
   {
-    role: 'Forensic Lab Analyst (FSL)',
-    badge: 'FSL-DL-8812',
+    role: 'Forensic Lab',
+    badge: 'PIN: 1234',
     icon: FlaskConical,
     color: '#15803d',
     desc: 'Calibrates UNODC optical reference curves, inspects incoming evidence vaults, and logs confirmatory assays.',
@@ -103,8 +104,8 @@ const ROLES_SHOWCASE = [
     ],
   },
   {
-    role: 'Zonal Director (Command)',
-    badge: 'HQ-DIR-0001',
+    role: 'Zonal Officer',
+    badge: 'PIN: 1234',
     icon: Building2,
     color: '#d97706',
     desc: 'Strategic command oversight across pan-India interdiction hotspots and inter-state trafficking corridors.',
@@ -115,8 +116,8 @@ const ROLES_SHOWCASE = [
     ],
   },
   {
-    role: 'Special NDPS Court Reader',
-    badge: 'JUD-NDPS-2026',
+    role: 'Court',
+    badge: 'PIN: 1234',
     icon: Scale,
     color: '#7c3aed',
     desc: 'Judicial officer verifying tamper-proof chain of custody and Section 52A Magisterial compliance certificates.',
@@ -178,33 +179,35 @@ export default function LandingPage() {
               <Link
                 href="/login"
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-                  padding: '0.75rem 1.5rem',
+                  display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                  padding: '0.85rem 1.75rem',
                   background: '#0f5ca8',
                   color: '#ffffff',
-                  borderRadius: '8px',
-                  fontWeight: 700, fontSize: '0.9rem',
+                  borderRadius: '10px',
+                  fontWeight: 800, fontSize: '0.95rem',
                   textDecoration: 'none',
-                  boxShadow: '0 4px 12px rgba(15, 92, 168, 0.25)',
+                  boxShadow: '0 4px 14px rgba(15, 92, 168, 0.3)',
                 }}
               >
-                Access Officer Gateway <ArrowRight size={16} />
+                Enter the Portal <ArrowRight size={17} />
               </Link>
-
               <a
-                href="#simulator"
+                href="https://youtu.be/swu03uB_bSw?si=cEE384z0B0vpO254"
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-                  padding: '0.75rem 1.25rem',
-                  border: '1px solid #cbd5e1',
+                  display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                  padding: '0.85rem 1.35rem',
                   background: '#ffffff',
-                  color: '#0f172a',
-                  borderRadius: '8px',
-                  fontWeight: 700, fontSize: '0.88rem',
+                  border: '1.5px solid #fca5a5',
+                  color: '#dc2626',
+                  borderRadius: '10px',
+                  fontWeight: 800, fontSize: '0.92rem',
                   textDecoration: 'none',
+                  boxShadow: '0 2px 8px rgba(220, 38, 38, 0.08)',
                 }}
               >
-                Assay Simulator ↓
+                <Play size={16} fill="#dc2626" /> Watch Demo Video
               </a>
             </div>
 
@@ -311,6 +314,104 @@ export default function LandingPage() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ─── Video Demonstration & QR Code Section ─────────────── */}
+      <section style={{
+        padding: '2.5rem 1.25rem',
+        background: 'linear-gradient(135deg, #091e3a 0%, #0c3359 50%, #08223f 100%)',
+        color: '#ffffff',
+        borderBottom: '1px solid #1e3a5f',
+      }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }} className="grid grid-cols-1 md:grid-cols-[1.35fr_0.85fr] gap-6 sm:gap-10 items-center">
+          <div>
+            <div className="inline-flex items-center gap-2 bg-red-500/20 border border-red-400/30 px-3 py-1 rounded-full mb-3 text-red-300 text-[11px] font-black uppercase tracking-wider">
+              <Play size={12} fill="#fca5a5" />
+              <span>SIH 2026 Video Demonstration · PS ID 26231</span>
+            </div>
+            <h2 style={{ fontSize: 'clamp(1.6rem, 3.2vw, 2.3rem)', fontWeight: 900, lineHeight: 1.18, margin: '0 0 0.65rem', color: '#ffffff', letterSpacing: '-0.02em' }}>
+              Watch Full System Walkthrough &amp; Field Demo
+            </h2>
+            <p style={{ fontSize: '0.9rem', lineHeight: 1.6, color: 'rgba(255, 255, 255, 0.85)', margin: '0 0 1.25rem', maxWidth: 540 }}>
+              See <strong>SAKSHYA AI (साक्ष्य AI)</strong> demonstrated live: 5ms on-device CIELAB colorimetry, offline SHA-256 evidence sealing, GPS satellite locking, and 1-click Section 52 NDPS Panchnama creation.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <a
+                href="https://youtu.be/swu03uB_bSw?si=cEE384z0B0vpO254"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.8rem 1.6rem',
+                  background: '#e50914',
+                  color: '#ffffff',
+                  borderRadius: '10px',
+                  fontWeight: 800,
+                  fontSize: '0.92rem',
+                  textDecoration: 'none',
+                  boxShadow: '0 4px 16px rgba(229, 9, 20, 0.4)',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <Play size={16} fill="#ffffff" />
+                <span>Watch on YouTube</span>
+                <ExternalLink size={14} />
+              </a>
+              <Link
+                href="/login"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  padding: '0.8rem 1.35rem',
+                  background: 'rgba(255, 255, 255, 0.12)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  color: '#ffffff',
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  textDecoration: 'none',
+                }}
+              >
+                <span>Enter Portal</span>
+                <ArrowRight size={15} />
+              </Link>
+            </div>
+            <div style={{ marginTop: '1.25rem', fontSize: '0.74rem', color: 'rgba(255, 255, 255, 0.65)', fontWeight: 600 }}>
+              Team Name: <strong>Sudophiles</strong> · Team ID: <strong>173635</strong> · MedTech / HealthTech
+            </div>
+          </div>
+
+          {/* QR Code Presentation Box */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{
+              background: '#ffffff',
+              padding: '1.1rem',
+              borderRadius: '18px',
+              boxShadow: '0 16px 36px rgba(0, 0, 0, 0.4)',
+              border: '3px solid rgba(255, 255, 255, 0.35)',
+              textAlign: 'center',
+              maxWidth: 240,
+              width: '100%',
+            }}>
+              <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', background: '#f8fafc', padding: '0.35rem', border: '1px solid #e2e8f0', marginBottom: '0.65rem' }}>
+                <img
+                  src="/qrcode_www.youtube.com.png"
+                  alt="Scan to watch demo video on YouTube"
+                  style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '8px' }}
+                />
+              </div>
+              <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
+                <QrCode size={16} color="#0f5ca8" /> Scan to Watch
+              </div>
+              <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 600 }}>
+                Scan with any smartphone camera to open video
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

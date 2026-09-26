@@ -60,11 +60,11 @@ export default function RootShell({ children }: { children: React.ReactNode }) {
     if (isMobile) setSidebarOpen(false);
   }, [pathname, isMobile]);
 
-  // If authenticated, always show app shell (with sidebar) across all routes including /architecture and /how-to-use
-  // Only hide shell on login page or when user is not authenticated
-  const isLoginPage = pathname === '/login';
-  const showShell = isAuthenticated && !isLoginPage;
-  const isPublicPage = !isAuthenticated && (PUBLIC_PATHS.includes(pathname) || pathname === '/');
+  // Only show authenticated app shell (with sidebar) on operational workspace routes
+  // Never show sidebar on landing page ('/') or login page ('/login')
+  const isLandingOrLoginPage = pathname === '/' || pathname === '/login';
+  const showShell = isAuthenticated && !isLandingOrLoginPage;
+  const isPublicPage = !showShell;
 
   return (
     <>
@@ -97,10 +97,10 @@ export default function RootShell({ children }: { children: React.ReactNode }) {
             <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex' }}>
               <div
                 onClick={() => setSidebarOpen(false)}
-                style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.5)', backdropFilter: 'blur(2px)' }}
+                style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(3px)' }}
               />
-              <div style={{ position: 'relative', width: '260px', maxWidth: '80vw', height: '100%', background: '#ffffff', zIndex: 10, display: 'flex' }}>
-                <Sidebar />
+              <div style={{ position: 'relative', width: '280px', maxWidth: '85vw', height: '100%', background: '#ffffff', zIndex: 10, display: 'flex', boxShadow: '4px 0 24px rgba(0,0,0,0.2)' }}>
+                <Sidebar onItemClick={() => setSidebarOpen(false)} />
               </div>
             </div>
           )}
